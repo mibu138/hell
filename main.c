@@ -1,14 +1,20 @@
 #include <stdio.h>
 #include "cmd.h"
+#include "common.h"
 
 int main(int argc, char *argv[])
 {
-    printf("Starting.\n");
+    hell_Print("Starting.\n");
     H_CmdInit();
+    void bugger(char*);
     while (1)
     {
-        H_ConsoleInput();
+        const char* input = H_ConsoleInput();
+        if (input)
+        {
+            hell_Print("Hellmouth is open: %s\n", input);
+        }
     }
-    printf("End.\n");
+    hell_Print("End.\n");
     return 0;
 }

@@ -1,2 +1,2 @@
-hell: error.c error.h cmd.c cmd.h mem.c mem.h com.c com.h main.c
-	gcc -Wall error.c error.h cmd.c mem.c com.c main.c -o $@
+hell: input.c input.h cmd.c cmd.h mem.c mem.h common.c common.h main.c
+	gcc -Wall input.c cmd.c mem.c common.c main.c -o $@

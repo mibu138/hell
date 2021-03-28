@@ -1,11 +1,10 @@
 #ifndef HELL_CMD_H
 #define HELL_CMD_H
 
-typedef void (*H_CommandFn)(void);
+typedef void (*Hell_C_CommandFn)(void);
 
-void  H_CmdInit(void);
-void  H_AddCommand(char* cmdName, H_CommandFn fn);
-char* H_ConsoleInput(void);
-
+void  hell_c_Init(void);
+void  hell_c_AddCommand(char* cmdName, Hell_C_CommandFn fn);
+void  hell_c_BufExecute(void);
 
 #endif /* end of include guard: HYDROGEN_CMD_H */
