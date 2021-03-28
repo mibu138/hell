@@ -37,7 +37,7 @@ static void initConsoleInput(void)
         H_Printf("stdin is not a tty, tty console mode failed");
         H_Abort();
     }
-    H_Printf("Started tty console.\n");
+    H_Printf("Started hell console.\n");
     if (tcgetattr(0, &tc) != 0)
         H_ErrorMsg("tcgetattr failed");
     tc.c_lflag &= ~(ECHO | ICANON);
@@ -52,9 +52,15 @@ char* H_ConsoleInput(void)
     static char text[256];
     char c;
     int avail = read(0, &c, 1);
-    if (avail)
+    if (avail != -1)
     {
-        H_Printf("Read input %c\n", c);
+        int fs = sizeof("fucking ");
+        int cs = sizeof("cunt ");
+        memcpy(text, "fucking ", fs);
+        memcpy(text + fs, &c, 1);
+        memcpy(text + fs + 1, "cunt ", cs);
+        memcpy(text + fs + 1 + cs, " \0", 2);
+        write(1, text, fs + cs + 3);
     }
     return text;
 }
