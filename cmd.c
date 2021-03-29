@@ -34,12 +34,20 @@ static char  cmdTokenized[MAX_TOKEN_SIZE * MAX_TOKENS];
 
 static void cmdListFn(void)
 {
-    hell_Print("Command List called!\n");
+    // could filter based on 2nd argument at some point
+    // char* match = NULL;
+    // if (cmdArgc > 1)
+    //     match = cmdArgv[1];
+
+    for (CmdFunction* cmd = cmdFunctions; cmd; cmd = cmd->next)
+        hell_Print("%s\n", cmd->name);
 }
 
 static void cmdEchoFn(void)
 {
-    hell_Print("Echo!\n");
+	for (int i=1 ; i<cmdArgc ; i++)
+		hell_Print("%s ", cmdArgv[i]);
+	hell_Print("\n");
 }
 
 static void tokenizeString(const char* text)
@@ -55,6 +63,11 @@ static void tokenizeString(const char* text)
             return;
 
         cmdArgv[cmdArgc++] = textOut;
+        if (cmdArgc > MAX_TOKENS)
+        {
+            hell_Print("Too many tokens.\n");
+            return;
+        }
 
         while (*text > ' ') // while we are not on whitespace
             *textOut++ = *text++;
@@ -96,6 +109,13 @@ static void execute(const char* line)
 			return;
 		}
 	}
+}
+
+char* hell_c_Argv(unsigned int i)
+{
+    if (i >= cmdArgc)
+        return "";
+    return cmdArgv[i];
 }
 
 void hell_c_AddCommand(char* cmdName, Hell_C_CommandFn function)

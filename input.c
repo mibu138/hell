@@ -120,6 +120,12 @@ static void initConsoleInput(void)
 static char* getConsoleInput(void)
 {
     static char text[MAX_EDIT_LINE];
+    static bool newline = true;
+    if (newline)
+    {
+        write(1, ">> ", 3);
+        newline = false;
+    }
     char c;
     int avail = read(0, &c, 1);
     if (avail != -1)
@@ -138,6 +144,7 @@ static char* getConsoleInput(void)
             strncpy(text, ttyConsole.buffer, MAX_EDIT_LINE);
             //text[ttyConsole.cursor + 1] = '\0';
             fieldClear(&ttyConsole);
+            newline = true;
             write(1, &c, 1);
             return text;
         }
