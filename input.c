@@ -1,4 +1,5 @@
 #include "common.h"
+#include "cmd.h"
 #include "mem.h"
 #include <fcntl.h>
 #include <termios.h>
@@ -181,10 +182,15 @@ void hell_i_DrainEvents(void)
         event = &eventQueue[eventTail];   
         if (event->type == HELL_I_CONSOLE)
         {
+            hell_c_AddNText(event->ptr, event->ptrLen);
+            hell_c_AddChar('\n');
         }
-        for (int i = 0; i < subscriberCount; i++) 
+        else 
         {
-            if ( subscribers[i](event) ) break;
+            for (int i = 0; i < subscriberCount; i++) 
+            {
+                if ( subscribers[i](event) ) break;
+            }
         }
     }
 }

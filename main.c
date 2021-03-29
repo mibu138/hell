@@ -1,19 +1,18 @@
 #include <stdio.h>
 #include "cmd.h"
+#include "input.h"
 #include "common.h"
 
 int main(int argc, char *argv[])
 {
     hell_Print("Starting.\n");
-    H_CmdInit();
-    void bugger(char*);
+    hell_i_Init();
+    hell_c_Init();
     while (1)
     {
-        const char* input = H_ConsoleInput();
-        if (input)
-        {
-            hell_Print("Hellmouth is open: %s\n", input);
-        }
+        hell_i_SourceEvents();
+        hell_i_DrainEvents();
+        hell_c_Execute();
     }
     hell_Print("End.\n");
     return 0;

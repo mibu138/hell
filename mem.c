@@ -1,11 +1,11 @@
 #include "mem.h"
 
-void* H_Malloc(size_t size)
+void* hell_m_Alloc(size_t size)
 {
     return malloc(size);
 }
 
-void H_Free(void* ptr)
+void hell_m_Free(void* ptr)
 {
     free(ptr);
 }
