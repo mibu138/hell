@@ -1,3 +1,5 @@
+#include "input.h"
+#include "display.h"
 #include "common.h"
 #include "cmd.h"
 #include "mem.h"
@@ -8,6 +10,7 @@
 #include <memory.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <time.h>
 #include "private.h"
 //
 
@@ -18,44 +21,8 @@ typedef struct {
 	char	buffer[MAX_EDIT_LINE];
 } Field;
 //
-typedef struct {
-    int16_t  x;
-    int16_t  y;
-    uint8_t  buttonCode;
-} Hell_I_MouseData;
-
-typedef struct {
-    uint16_t width;
-    uint16_t height;
-} Hell_I_ResizeData;
-
-typedef union {
-    uint32_t          keyCode;
-    Hell_I_MouseData  mouseData;
-    Hell_I_ResizeData resizeData;
-} Hell_I_EventData;
-
-typedef enum {
-    HELL_I_NONE,
-    HELL_I_KEYDOWN,
-    HELL_I_KEYUP,
-    HELL_I_MOUSEDOWN,
-    HELL_I_MOUSEUP,
-    HELL_I_MOTION,
-    HELL_I_RESIZE,
-    HELL_I_CONSOLE
-} Hell_I_EventType;
-
-typedef struct Hell_I_Event {
-    Hell_I_EventType type;
-    Hell_I_EventData data;
-    uint64_t         time;
-    uint64_t         ptrLen;
-    void*            ptr;
-} Hell_I_Event;
 //
 // returning true consumes the event
-typedef bool (*Hell_I_SubscriberFn)(const Hell_I_Event*);
 
 #define MAX_SUBSCRIBERS 32
 
@@ -79,6 +46,29 @@ static int ttyEofCode;
 static Field ttyConsole;
 
 static_assert (STDIN_FILENO == 0, "We assume the the fd for stdin is 0");
+
+static struct timespec unixEpoch;
+#define UNIX_CLOCK_ID CLOCK_MONOTONIC
+
+static void initUnixTime(void)
+{
+    clock_gettime(UNIX_CLOCK_ID, &unixEpoch);
+}
+
+static uint64_t getUnixMicroSeconds(void)
+{
+    struct timespec curTime;
+    clock_gettime(UNIX_CLOCK_ID, &curTime);
+    time_t s = curTime.tv_sec - unixEpoch.tv_sec;
+    long   ns = curTime.tv_nsec - unixEpoch.tv_nsec;
+    uint64_t ms = s * 1000000 + ns / 1000;
+    return ms;
+}
+
+static void initTime(void)
+{
+    initUnixTime();
+}
 
 static void fieldClear(Field* field)
 {
@@ -105,7 +95,7 @@ static void initConsoleInput(void)
     struct termios tc;
     if(isatty(STDIN_FILENO)!=1)
         hell_Error(0, "stdin is not a tty, tty console mode failed");
-    hell_Print("Started console.\n");
+    hell_Announce("Started console.\n");
     if (tcgetattr(0, &tc) != 0)
         hell_Error(0, "tcgetattr failed");
     ttyEraseCode = tc.c_cc[VERASE];
@@ -154,7 +144,7 @@ static char* getConsoleInput(void)
     return NULL;
 }
 
-static void pushEvent(Hell_I_Event event)
+void hell_i_PushEvent(Hell_I_Event event)
 {
     eventQueue[eventHead] = event;
     eventHead = (eventHead + 1) % MAX_QUEUE_EVENTS;
@@ -162,10 +152,11 @@ static void pushEvent(Hell_I_Event event)
 
 void hell_i_Init(void)
 {
+    initTime();
     initConsoleInput();
 }
 
-void hell_i_SourceEvents(void)
+void hell_i_PumpEvents(void)
 {
     char* ci = getConsoleInput();
     if (ci)
@@ -176,8 +167,10 @@ void hell_i_SourceEvents(void)
         ev.ptrLen = strnlen(ci, MAX_EDIT_LINE - 1) + 1;
         ev.ptr = hell_m_Alloc(ev.ptrLen);
         memcpy(ev.ptr, ci, ev.ptrLen); // should copy a null at the end
-        pushEvent(ev);
+        ev.time = hell_Time();
+        hell_i_PushEvent(ev);
     }
+    hell_d_DrainWindowEvents();
 }
 
 void hell_i_DrainEvents(void)
@@ -185,19 +178,22 @@ void hell_i_DrainEvents(void)
     Hell_I_Event* event;
     for ( ; eventTail != eventHead; eventTail = (eventTail + 1) % MAX_QUEUE_EVENTS) 
     {
-        //printf("e");
         event = &eventQueue[eventTail];   
+        hell_Announce("Event: type %d time %ld \n", event->type, event->time);
         if (event->type == HELL_I_CONSOLE)
         {
             hell_c_AddNText(event->ptr, event->ptrLen);
             hell_c_AddChar('\n');
+            continue;
         }
-        else 
+        for (int i = 0; i < subscriberCount; i++) 
         {
-            for (int i = 0; i < subscriberCount; i++) 
-            {
-                if ( subscribers[i](event) ) break;
-            }
+            if ( subscribers[i](event) ) break;
         }
     }
+}
+
+uint64_t hell_Time()
+{
+    return getUnixMicroSeconds();
 }

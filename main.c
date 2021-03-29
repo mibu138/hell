@@ -12,18 +12,18 @@ static void chungus(void)
 
 int main(int argc, char *argv[])
 {
-    hell_Print("Starting.\n");
+    hell_Announce("Starting.\n");
     hell_i_Init();
     hell_c_Init();
     hell_d_Init(500, 500, 0);
     hell_c_AddCommand("chungus", chungus);
     while (1)
     {
-        hell_i_SourceEvents();
+        hell_i_PumpEvents();
         hell_i_DrainEvents();
         hell_c_Execute();
         usleep(16000);
     }
-    hell_Print("End.\n");
+    hell_Announce("End.\n");
     return 0;
 }
