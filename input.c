@@ -105,7 +105,7 @@ static void initConsoleInput(void)
     struct termios tc;
     if(isatty(STDIN_FILENO)!=1)
         hell_Error(0, "stdin is not a tty, tty console mode failed");
-    hell_Print("Started hell console.\n");
+    hell_Print("Started console.\n");
     if (tcgetattr(0, &tc) != 0)
         hell_Error(0, "tcgetattr failed");
     ttyEraseCode = tc.c_cc[VERASE];

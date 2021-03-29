@@ -8,6 +8,8 @@
 
 char errorMsgBuffer[MAX_PRINT_MSG];
 
+#define HEADER "HELL: "
+
 void hell_Print(const char* fmt, ...)
 {
     va_list argptr;
@@ -15,6 +17,7 @@ void hell_Print(const char* fmt, ...)
     va_start(argptr, fmt);
     vsnprintf(msg, sizeof(msg), fmt, argptr);
     va_end(argptr);
+    fputs(HEADER, stdout);
     fputs(msg, stdout);
 }
 
