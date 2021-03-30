@@ -262,6 +262,14 @@ start:
     }
 }
 
+static void cleanUpXcb(void)
+{
+    xcb_key_symbols_free(pXcbKeySymbols);
+    xcb_flush(xcbWindow.connection);
+    xcb_destroy_window(xcbWindow.connection, xcbWindow.window);
+    xcb_disconnect(xcbWindow.connection);
+}
+
 const Hell_Window* hell_d_Init(const uint16_t width, const uint16_t height, const char* name)
 {
     // once we support other platforms we can put a switch in here
@@ -271,5 +279,12 @@ const Hell_Window* hell_d_Init(const uint16_t width, const uint16_t height, cons
 
 void hell_d_DrainWindowEvents(void)
 {
-    drainXcbEventQueue();
+    if (window.typeSpecificData) // used to it is active
+        drainXcbEventQueue();
+}
+
+void hell_d_CleanUp(void)
+{
+    cleanUpXcb();
+    hell_Announce("Display shutdown.\n");
 }

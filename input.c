@@ -14,6 +14,10 @@
 #include "private.h"
 //
 
+static_assert(sizeof(Hell_I_EventType) == 4, "sizeof(Hell_I_EventType) should be 4");
+static_assert(sizeof(Hell_I_EventMask) == 4, "sizeof(Hell_I_EventMask) should be 4");
+static_assert(sizeof(Hell_I_Event) == 32,    "sizeof(Hell_I_Event) should be 32, to allow 2 events to be read with each cacheline read (assuming the event queue is aligned well)");
+
 typedef struct {
 	int		cursor;
 	int		scroll;
@@ -33,6 +37,9 @@ typedef struct {
 
 static Hell_I_Subscription subscriptions[MAX_SUBSCRIBERS];
 static int subscriberCount;
+
+static struct termios origTc; // stash the tc at program start here so we can reset it on shut down
+static bool   consoleActive;
 
 //
 // bk000306: upped this from 64
@@ -103,6 +110,7 @@ static void initConsoleInput(void)
     hell_Announce("Started console.\n");
     if (tcgetattr(0, &tc) != 0)
         hell_Error(0, "tcgetattr failed");
+    origTc = tc;
     ttyEraseCode = tc.c_cc[VERASE];
     ttyEofCode   = tc.c_cc[VEOF];
     tc.c_lflag &= ~(ECHO | ICANON);
@@ -114,6 +122,7 @@ static void initConsoleInput(void)
 
 static char* getConsoleInput(void)
 {
+    if (!consoleActive) return NULL;
     static char text[MAX_EDIT_LINE];
     static bool newline = true;
     if (newline)
@@ -167,10 +176,14 @@ void hell_i_PushWindowResizeEvent(unsigned int width, unsigned int height)
     pushEvent(ev);
 }
 
-void hell_i_Init(void)
+void hell_i_Init(bool initConsole)
 {
     initTime();
-    initConsoleInput();
+    if (initConsole)
+    {
+        initConsoleInput();
+        consoleActive = true;
+    }
 }
 
 void hell_i_PumpEvents(void)
@@ -181,9 +194,11 @@ void hell_i_PumpEvents(void)
         Hell_I_Event ev = {
             .type = HELL_I_CONSOLE,
         };
-        ev.ptrLen = strnlen(ci, MAX_EDIT_LINE - 1) + 1;
-        ev.ptr = hell_m_Alloc(ev.ptrLen);
-        memcpy(ev.ptr, ci, ev.ptrLen); // should copy a null at the end
+        // this should put a trailing null at the end of the data, but not sure if we need this...
+        //ev.data.consoleData.ptrLen = strnlen(ci, MAX_EDIT_LINE - 1) + 1; 
+        ev.data.consoleData.ptrLen = strnlen(ci, MAX_EDIT_LINE); 
+        ev.data.consoleData.ptr = hell_m_Alloc(ev.data.consoleData.ptrLen);
+        memcpy(ev.data.consoleData.ptr, ci, ev.data.consoleData.ptrLen); // should copy a null at the end
         ev.time = hell_Time();
         pushEvent(ev);
     }
@@ -199,8 +214,9 @@ void hell_i_DrainEvents(void)
         //hell_Announce("Event: type %d time %ld \n", event->type, event->time);
         if (event->type == HELL_I_CONSOLE)
         {
-            hell_c_AddNText(event->ptr, event->ptrLen);
+            hell_c_AddNText(event->data.consoleData.ptr, event->data.consoleData.ptrLen);
             hell_c_AddChar('\n');
+            hell_m_Free(event->data.consoleData.ptr);
             continue;
         }
         for (int i = 0; i < subscriberCount; i++) 
@@ -288,4 +304,42 @@ void hell_i_PushEmptyEvent(void)
         .time = hell_Time()
     };
     pushEvent(ev);
+}
+
+void hell_i_CleanUp(void)
+{
+    memset(subscriptions, 0, sizeof(subscriptions));
+    subscriberCount = 0;
+    memset(eventQueue, 0, sizeof(eventQueue));
+    eventHead = 0;
+    eventTail = 0;
+    memset(&unixEpoch, 0, sizeof(unixEpoch));
+    ttyEofCode = 0;
+    ttyEofCode = 0;
+    memset(&ttyConsole, 0, sizeof(ttyConsole));
+    if (consoleActive)
+    {
+        tcsetattr(0, TCSADRAIN, &origTc);
+        fcntl(0, F_SETFL, fcntl (0, F_GETFL, 0) & ~FNDELAY);
+    }
+    hell_Announce("Input shutdown.\n");
+}
+
+void hell_i_Unsubscribe(const Hell_I_SubscriberFn fn)
+{
+    assert(subscriberCount > 0);
+    hell_DPrint("HELL: Unsubscribing fn...\n");
+    int fnIndex = -1;
+    for (int i = 0; i < subscriberCount; i++)
+    {
+        if (subscriptions[i].func == fn)
+        {
+            fnIndex = i;
+            break;
+        }
+    }
+    if (fnIndex != -1)
+        memmove(subscriptions + fnIndex, 
+                subscriptions + fnIndex + 1, 
+                (--subscriberCount - fnIndex) * sizeof(*subscriptions)); // should only decrement the count if fnIndex is 0
 }

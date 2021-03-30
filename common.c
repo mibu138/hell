@@ -21,6 +21,16 @@ void hell_Print(const char* fmt, ...)
     fputs(msg, stdout);
 }
 
+void hell_DPrint(const char* fmt, ...)
+{
+    va_list argptr;
+    char    msg[MAX_PRINT_MSG];
+    va_start(argptr, fmt);
+    vsnprintf(msg, sizeof(msg), fmt, argptr);
+    va_end(argptr);
+    fputs(msg, stderr);
+}
+
 void hell_Announce(const char* fmt, ...)
 {
     va_list argptr;

@@ -13,6 +13,8 @@ typedef struct {
 } Hell_Window;
 
 const Hell_Window* hell_d_Init(const unsigned short width, const unsigned short height, const char* name);
+void               hell_d_CleanUp(void);
+// does nothing if window is not active
 void               hell_d_DrainWindowEvents(void);
 
 #endif /* end of include guard: DISPLAY_H */

@@ -8,6 +8,7 @@ typedef enum {
 } Hell_ErrorCode;
 
 void     hell_Print(const char* fmt, ...);
+void     hell_DPrint(const char* fmt, ...);
 void     hell_Announce(const char* fmt, ...);
 void     hell_Error( Hell_ErrorCode code, const char *fmt, ... );
 // returns time since epoch in microseconds

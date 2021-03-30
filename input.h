@@ -15,10 +15,16 @@ typedef struct {
     uint16_t height;
 } Hell_I_ResizeData;
 
+typedef struct {
+    void*            ptr;
+    uint32_t         ptrLen;
+} HELL_I_ConsoleData;
+
 typedef union {
-    uint32_t          keyCode;
-    Hell_I_MouseData  mouseData;
-    Hell_I_ResizeData resizeData;
+    Hell_I_MouseData   mouseData;
+    Hell_I_ResizeData  resizeData;
+    HELL_I_ConsoleData consoleData;
+    uint32_t           keyCode;
 } Hell_I_EventData;
 
 typedef enum {
@@ -43,20 +49,20 @@ typedef enum {
 typedef uint32_t Hell_I_EventMask;
 
 typedef struct Hell_I_Event {
-    Hell_I_EventType type;
     Hell_I_EventData data;
+    Hell_I_EventType type;
     Hell_I_EventMask mask;
     uint64_t         time;
-    uint64_t         ptrLen;
-    void*            ptr;
 } Hell_I_Event;
 
 typedef bool (*Hell_I_SubscriberFn)(const Hell_I_Event*);
 
-void hell_i_Init(void);
+void hell_i_Init(bool initConsole);
 void hell_i_PumpEvents(void);
 void hell_i_DrainEvents(void);
 void hell_i_Subscribe(Hell_I_SubscriberFn func, Hell_I_EventMask mask);
+void hell_i_Unsubscribe(const Hell_I_SubscriberFn fn);
+void hell_i_CleanUp(void);
 
 void hell_i_PushWindowResizeEvent(unsigned int width, unsigned int height);
 void hell_i_PushMouseDownEvent(int16_t x, int16_t y, uint8_t buttonCode);
