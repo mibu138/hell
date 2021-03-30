@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <assert.h>
 #include "common.h"
 
 #define MAX_PRINT_MSG 256
@@ -49,4 +50,44 @@ void hell_Error( Hell_ErrorCode errorCode, const char *fmt, ... )
     fputc(errno, stderr);
     fputc('\n', stderr);
     hell_Abort();
+}
+
+uint64_t hell_Align(const uint64_t quantity, const uint32_t alignment)
+{
+    assert(alignment != 0);
+    if (quantity % alignment != 0) // not aligned
+        return (quantity / alignment + 1) * alignment;
+    else
+        return quantity;
+}
+
+void hell_BitPrint(const void* const thing, const uint32_t bitcount)
+{
+    int mask;
+    for (int i = bitcount - 1; i >= 0; i--) {
+        mask = 1 << i;   
+        if (mask & *(int*)thing)
+            putchar('1');
+        else
+            putchar('0');
+    }
+    putchar('\n');
+}
+
+void hell_BytePrint(const void* const thing, const uint32_t byteCount)
+{
+    int mask;
+    const uint8_t* base = (uint8_t*)thing;
+    for (int i = byteCount - 1; i >= 0; i--) 
+    {
+        for (int j = 8 - 1; j >= 0; j--) 
+        {
+            mask = 1 << j;
+            if (mask & *(base + i))
+                putchar('1');
+            else
+                putchar('0');
+        }
+    }
+    putchar('\n');
 }

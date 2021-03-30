@@ -1,21 +1,19 @@
 #include <assert.h>
+#include <stdlib.h>
 #include <xcb/xcb.h>
 #include <string.h>
 #include <xcb/xcb_keysyms.h>
 #include <xcb/xcb_event.h>
 #include <xcb/xproto.h>
 #include <X11/keysym.h>
+#include "display.h"
 #include "common.h"
 #include "evcodes.h"
 #include "input.h"
 #include "mem.h"
+#include "xcb_window_type.h"
 
 static_assert(__unix__, "Only support displays on unix currently");
-
-typedef struct {
-    xcb_connection_t* connection;
-    xcb_window_t      window;
-} XcbWindow;
 
 static XcbWindow xcbWindow;
 
@@ -25,84 +23,90 @@ static uint32_t windowHeight;
 static char windowName[32] = "floating";
 static xcb_key_symbols_t* pXcbKeySymbols;
 
-static Hell_I_EventData getKeyData(xcb_key_press_event_t* event)
+static Hell_Window window;
+
+static uint32_t getKeyCode(const xcb_key_press_event_t* event)
 {
     // XCB documentation is fucking horrible. fucking last parameter is called col. wtf? 
     // no clue what that means. ZERO documentation on this function. trash.
     xcb_keysym_t keySym = xcb_key_symbols_get_keysym(pXcbKeySymbols, event->detail, 0); 
-    Hell_I_EventData data;
+    uint32_t keyCode = 0;
     switch (keySym)
     {
-        case XK_a:         data.keyCode = HELL_KEY_A; break;
-        case XK_b:         data.keyCode = HELL_KEY_B; break;
-        case XK_c:         data.keyCode = HELL_KEY_C; break;
-        case XK_d:         data.keyCode = HELL_KEY_D; break;
-        case XK_e:         data.keyCode = HELL_KEY_E; break;
-        case XK_f:         data.keyCode = HELL_KEY_F; break;
-        case XK_g:         data.keyCode = HELL_KEY_G; break;
-        case XK_h:         data.keyCode = HELL_KEY_H; break;
-        case XK_i:         data.keyCode = HELL_KEY_I; break;
-        case XK_j:         data.keyCode = HELL_KEY_J; break;
-        case XK_k:         data.keyCode = HELL_KEY_K; break;
-        case XK_l:         data.keyCode = HELL_KEY_L; break;
-        case XK_m:         data.keyCode = HELL_KEY_M; break;
-        case XK_n:         data.keyCode = HELL_KEY_N; break;
-        case XK_o:         data.keyCode = HELL_KEY_O; break;
-        case XK_p:         data.keyCode = HELL_KEY_P; break;
-        case XK_q:         data.keyCode = HELL_KEY_Q; break;
-        case XK_r:         data.keyCode = HELL_KEY_R; break;
-        case XK_s:         data.keyCode = HELL_KEY_S; break;
-        case XK_t:         data.keyCode = HELL_KEY_T; break;
-        case XK_u:         data.keyCode = HELL_KEY_U; break;
-        case XK_v:         data.keyCode = HELL_KEY_V; break;
-        case XK_w:         data.keyCode = HELL_KEY_W; break;
-        case XK_x:         data.keyCode = HELL_KEY_X; break;
-        case XK_y:         data.keyCode = HELL_KEY_Y; break;
-        case XK_z:         data.keyCode = HELL_KEY_Z; break;
-        case XK_1:         data.keyCode = HELL_KEY_1; break;
-        case XK_2:         data.keyCode = HELL_KEY_2; break;
-        case XK_3:         data.keyCode = HELL_KEY_3; break;
-        case XK_4:         data.keyCode = HELL_KEY_4; break;
-        case XK_5:         data.keyCode = HELL_KEY_5; break;
-        case XK_6:         data.keyCode = HELL_KEY_6; break;
-        case XK_7:         data.keyCode = HELL_KEY_7; break;
-        case XK_8:         data.keyCode = HELL_KEY_8; break;
-        case XK_9:         data.keyCode = HELL_KEY_9; break;
-        case XK_space:     data.keyCode = HELL_KEY_SPACE; break;
-        case XK_Control_L: data.keyCode = HELL_KEY_CTRL; break;
-        case XK_Escape:    data.keyCode = HELL_KEY_ESC; break;
-        default: data.keyCode = 0; break;
+        case XK_a:         keyCode = HELL_KEY_A; break;
+        case XK_b:         keyCode = HELL_KEY_B; break;
+        case XK_c:         keyCode = HELL_KEY_C; break;
+        case XK_d:         keyCode = HELL_KEY_D; break;
+        case XK_e:         keyCode = HELL_KEY_E; break;
+        case XK_f:         keyCode = HELL_KEY_F; break;
+        case XK_g:         keyCode = HELL_KEY_G; break;
+        case XK_h:         keyCode = HELL_KEY_H; break;
+        case XK_i:         keyCode = HELL_KEY_I; break;
+        case XK_j:         keyCode = HELL_KEY_J; break;
+        case XK_k:         keyCode = HELL_KEY_K; break;
+        case XK_l:         keyCode = HELL_KEY_L; break;
+        case XK_m:         keyCode = HELL_KEY_M; break;
+        case XK_n:         keyCode = HELL_KEY_N; break;
+        case XK_o:         keyCode = HELL_KEY_O; break;
+        case XK_p:         keyCode = HELL_KEY_P; break;
+        case XK_q:         keyCode = HELL_KEY_Q; break;
+        case XK_r:         keyCode = HELL_KEY_R; break;
+        case XK_s:         keyCode = HELL_KEY_S; break;
+        case XK_t:         keyCode = HELL_KEY_T; break;
+        case XK_u:         keyCode = HELL_KEY_U; break;
+        case XK_v:         keyCode = HELL_KEY_V; break;
+        case XK_w:         keyCode = HELL_KEY_W; break;
+        case XK_x:         keyCode = HELL_KEY_X; break;
+        case XK_y:         keyCode = HELL_KEY_Y; break;
+        case XK_z:         keyCode = HELL_KEY_Z; break;
+        case XK_1:         keyCode = HELL_KEY_1; break;
+        case XK_2:         keyCode = HELL_KEY_2; break;
+        case XK_3:         keyCode = HELL_KEY_3; break;
+        case XK_4:         keyCode = HELL_KEY_4; break;
+        case XK_5:         keyCode = HELL_KEY_5; break;
+        case XK_6:         keyCode = HELL_KEY_6; break;
+        case XK_7:         keyCode = HELL_KEY_7; break;
+        case XK_8:         keyCode = HELL_KEY_8; break;
+        case XK_9:         keyCode = HELL_KEY_9; break;
+        case XK_space:     keyCode = HELL_KEY_SPACE; break;
+        case XK_Control_L: keyCode = HELL_KEY_CTRL; break;
+        case XK_Escape:    keyCode = HELL_KEY_ESC; break;
+        default: keyCode = 0; break;
     }
-    return data;
+    return keyCode;
 }
 
-static Hell_I_EventData getMouseData(const xcb_generic_event_t* event)
+static Hell_I_MouseData getMouseData(const xcb_generic_event_t* event)
 {
     xcb_motion_notify_event_t* motion = (xcb_motion_notify_event_t*)event;
-    Hell_I_EventData data;
-    data.mouseData.x = motion->event_x;
-    data.mouseData.y = motion->event_y;
-    if (motion->detail == 1) data.mouseData.buttonCode = HELL_MOUSE_LEFT; 
-    else if (motion->detail == 2) data.mouseData.buttonCode = HELL_MOUSE_MID; 
-    else if (motion->detail == 3) data.mouseData.buttonCode = HELL_MOUSE_RIGHT;
-    return data;
+    Hell_I_MouseData mouseData;
+    mouseData.x = motion->event_x;
+    mouseData.y = motion->event_y;
+    if (motion->detail == 1) mouseData.buttonCode = HELL_MOUSE_LEFT; 
+    else if (motion->detail == 2) mouseData.buttonCode = HELL_MOUSE_MID; 
+    else if (motion->detail == 3) mouseData.buttonCode = HELL_MOUSE_RIGHT;
+    return mouseData;
 }
 
-static Hell_I_EventData getResizeData(const xcb_generic_event_t* event)
+static Hell_I_ResizeData getResizeData(const xcb_generic_event_t* event)
 {
     xcb_resize_request_event_t* resize = (xcb_resize_request_event_t*)event;
-    Hell_I_EventData data = {0};
-    data.resizeData.height = resize->height;
-    data.resizeData.width  = resize->width;
+    Hell_I_ResizeData data = {0};
+    data.height = resize->height;
+    data.width  = resize->width;
+    window.width  = resize->width;
+    window.height = resize->height;
     return data;
 }
 
-static Hell_I_EventData getConfigureData(const xcb_generic_event_t* event)
+static Hell_I_ResizeData getConfigureData(const xcb_generic_event_t* event)
 {
     xcb_configure_notify_event_t* resize = (xcb_configure_notify_event_t*)event;
-    Hell_I_EventData data = {0};
-    data.resizeData.height = resize->height;
-    data.resizeData.width  = resize->width;
+    Hell_I_ResizeData data = {0};
+    data.height = resize->height;
+    data.width  = resize->width;
+    window.width           = resize->width;
+    window.height          = resize->height;
     return data;
 }
 
@@ -166,6 +170,11 @@ static void initXcbWindow(const uint16_t width, const uint16_t height, const cha
     xcb_flush(xcbWindow.connection);
     pXcbKeySymbols = xcb_key_symbols_alloc(xcbWindow.connection);
     hell_Announce("Xcb Display initialized.\n");
+
+    window.width            = width;
+    window.height           = height;
+    window.type             = HELL_WINDOW_XCB_TYPE;
+    window.typeSpecificData = &xcbWindow;
 }
 
 static void drainXcbEventQueue(void)
@@ -173,85 +182,90 @@ static void drainXcbEventQueue(void)
     xcb_generic_event_t* xEvent = NULL;
     while ((xEvent = xcb_poll_for_event(xcbWindow.connection)))
     {
-        Hell_I_Event event;
+start:
         switch (XCB_EVENT_RESPONSE_TYPE(xEvent))
         {
             case XCB_KEY_PRESS: 
-                event.type = HELL_I_KEYDOWN; 
-                Hell_I_EventData data = getKeyData((xcb_key_press_event_t*)xEvent);
-                if (data.keyCode == 0) goto end;
-                event.data = data;
+            {
+                uint32_t keyCode = getKeyCode((xcb_key_press_event_t*)xEvent);
+                if (keyCode != 0)
+                    hell_i_PushKeyDownEvent(keyCode);
                 break;
+            }
             case XCB_KEY_RELEASE: 
+            {
                 // bunch of extra stuff here dedicated to detecting autrepeats
                 // the idea is that if a key-release event is detected, followed
                 // by an immediate keypress of the same key, its an autorepeat.
                 // its unclear to me whether very rapidly hitting a key could
                 // result in the same thing, and wheter it is worthwhile 
                 // accounting for that
-                event.type = HELL_I_KEYUP;
-                data = getKeyData((xcb_key_press_event_t*)xEvent);
-                if (data.keyCode == 0) goto end;
-                event.data = data;
+                uint32_t keyCode = getKeyCode((xcb_key_press_event_t*)xEvent);
+                if (keyCode == 0) break;
                 // need to see if this is actually an auto repeat
                 xcb_generic_event_t* next = xcb_poll_for_event(xcbWindow.connection);
                 if (next) 
                 {
-                    Hell_I_Event event2;
                     uint8_t type = XCB_EVENT_RESPONSE_TYPE(next);
-                    event2.data = getKeyData((xcb_key_press_event_t*)next);
-                    if (type == XCB_KEY_PRESS 
-                            && event2.data.keyCode == event.data.keyCode)
+                    uint32_t keyCodeNext = getKeyCode((xcb_key_press_event_t*)next);
+                    // if next is not a press or the key code is different then neither are autorepeats
+                    if (type != XCB_KEY_PRESS || keyCode != keyCodeNext)
                     {
-                        // is likely an autorepeate
-                        free(next);
-                        goto end;
+                        hell_i_PushKeyUpEvent(keyCode);
+                        free(xEvent);
+                        xEvent = next;
+                        goto start;
                     }
-                    else
-                    {
-                        event2.type = HELL_I_KEYUP;
-                        hell_i_PushEvent(event);
-                        event = event2;
+                    else // is an autorepeat
                         free(next);
-                    }
                     break;
                 }
+                hell_i_PushKeyUpEvent(keyCode);
                 break;
+            }
             case XCB_BUTTON_PRESS:
-                event.type = HELL_I_MOUSEDOWN;
-                event.data = getMouseData(xEvent);
+            {
+                Hell_I_MouseData data = getMouseData(xEvent);
+                hell_i_PushMouseDownEvent(data.x, data.y, data.buttonCode);
                 break;
+            }
             case XCB_BUTTON_RELEASE:
-                event.type = HELL_I_MOUSEUP;
-                event.data = getMouseData(xEvent);
+            {
+                Hell_I_MouseData data = getMouseData(xEvent);
+                hell_i_PushMouseUpEvent(data.x, data.y, data.buttonCode);
                 break;
+            }
             case XCB_MOTION_NOTIFY:
-                event.type = HELL_I_MOTION;
-                event.data = getMouseData(xEvent);
+            {
+                Hell_I_MouseData data = getMouseData(xEvent);
+                hell_i_PushMouseMotionEvent(data.x, data.y, data.buttonCode);
                 break;
+            }
             case XCB_RESIZE_REQUEST:
-                event.type = HELL_I_RESIZE;
-                event.data = getResizeData(xEvent);
+            {
+                Hell_I_ResizeData data = getResizeData(xEvent);
+                hell_i_PushWindowResizeEvent(data.width, data.height);
                 break;
+            }
             // for some reason resize events seem to come through here.... but so do window moves...
             // TODO: throw out window moves.
             case XCB_CONFIGURE_NOTIFY: 
-                event.type = HELL_I_RESIZE;
-                event.data = getConfigureData(xEvent);
+            {
+                Hell_I_ResizeData data = getConfigureData(xEvent);
+                hell_i_PushWindowResizeEvent(data.width, data.height);
                 break;
-            default: goto end;
+            }
+            default: break;
         }
-        event.time = hell_Time();
-        hell_i_PushEvent(event);
-end:
         free(xEvent); // using clib free directly because we did not allocate the xevent
     }
 }
 
-void hell_d_Init(const uint16_t width, const uint16_t height, const char* name)
+const Hell_Window* hell_d_Init(const uint16_t width, const uint16_t height, const char* name)
 {
     // once we support other platforms we can put a switch in here
     initXcbWindow(width, height, name);
+    return &window;
 }
 
 void hell_d_DrainWindowEvents(void)

@@ -26,7 +26,12 @@ typedef struct {
 
 #define MAX_SUBSCRIBERS 32
 
-static Hell_I_SubscriberFn subscribers[MAX_SUBSCRIBERS];
+typedef struct {
+    Hell_I_SubscriberFn func;
+    Hell_I_EventMask    eventMask;
+} Hell_I_Subscription;
+
+static Hell_I_Subscription subscriptions[MAX_SUBSCRIBERS];
 static int subscriberCount;
 
 //
@@ -144,10 +149,22 @@ static char* getConsoleInput(void)
     return NULL;
 }
 
-void hell_i_PushEvent(Hell_I_Event event)
+static void pushEvent(Hell_I_Event event)
 {
     eventQueue[eventHead] = event;
     eventHead = (eventHead + 1) % MAX_QUEUE_EVENTS;
+}
+
+void hell_i_PushWindowResizeEvent(unsigned int width, unsigned int height)
+{
+    Hell_I_Event ev = {
+        .time = hell_Time(),
+        .type = HELL_I_RESIZE,
+        .mask = HELL_I_WINDOW_BIT
+    };
+    ev.data.resizeData.width = width;
+    ev.data.resizeData.height = height;
+    pushEvent(ev);
 }
 
 void hell_i_Init(void)
@@ -168,7 +185,7 @@ void hell_i_PumpEvents(void)
         ev.ptr = hell_m_Alloc(ev.ptrLen);
         memcpy(ev.ptr, ci, ev.ptrLen); // should copy a null at the end
         ev.time = hell_Time();
-        hell_i_PushEvent(ev);
+        pushEvent(ev);
     }
     hell_d_DrainWindowEvents();
 }
@@ -188,12 +205,87 @@ void hell_i_DrainEvents(void)
         }
         for (int i = 0; i < subscriberCount; i++) 
         {
-            if ( subscribers[i](event) ) break;
+            if (subscriptions[i].eventMask & event->mask)
+                if ( subscriptions[i].func(event) ) break; // if func returns true the event break from the loop
         }
     }
+}
+
+void hell_I_Subscribe(Hell_I_SubscriberFn func, Hell_I_EventMask mask)
+{
+    subscriptions[subscriberCount++] = (Hell_I_Subscription){func, mask};
 }
 
 uint64_t hell_Time()
 {
     return getUnixMicroSeconds();
+}
+
+void hell_i_PushMouseDownEvent(int16_t x, int16_t y, uint8_t buttonCode)
+{
+    Hell_I_Event ev = {
+        .type = HELL_I_MOUSEDOWN,
+        .mask = HELL_I_MOUSE_BIT,
+        .time = hell_Time(),
+    };
+    ev.data.mouseData.x = x;
+    ev.data.mouseData.y = y;
+    ev.data.mouseData.buttonCode = buttonCode;
+    pushEvent(ev);
+}
+
+void hell_i_PushMouseUpEvent(int16_t x, int16_t y, uint8_t buttonCode)
+{
+    Hell_I_Event ev = {
+        .type = HELL_I_MOUSEUP,
+        .mask = HELL_I_MOUSE_BIT,
+        .time = hell_Time(),
+    };
+    ev.data.mouseData.x = x;
+    ev.data.mouseData.y = y;
+    ev.data.mouseData.buttonCode = buttonCode;
+    pushEvent(ev);
+}
+
+void hell_i_PushMouseMotionEvent(int16_t x, int16_t y, uint8_t buttonCode)
+{
+    Hell_I_Event ev = {
+        .type = HELL_I_MOTION,
+        .mask = HELL_I_MOUSE_BIT,
+        .time = hell_Time(),
+    };
+    ev.data.mouseData.x = x;
+    ev.data.mouseData.y = y;
+    ev.data.mouseData.buttonCode = buttonCode;
+    pushEvent(ev);
+}
+
+void hell_i_PushKeyDownEvent(uint32_t keyCode)
+{
+    Hell_I_Event ev = {
+        .type = HELL_I_KEYDOWN,
+        .mask = HELL_I_KEY_BIT,
+        .time = hell_Time()
+    };
+    ev.data.keyCode = keyCode;
+    pushEvent(ev);
+}
+
+void hell_i_PushKeyUpEvent(uint32_t keyCode)
+{
+    Hell_I_Event ev = {
+        .type = HELL_I_KEYUP,
+        .mask = HELL_I_KEY_BIT,
+        .time = hell_Time()
+    };
+    ev.data.keyCode = keyCode;
+    pushEvent(ev);
+}
+
+void hell_i_PushEmptyEvent(void)
+{
+    Hell_I_Event ev = {
+        .time = hell_Time()
+    };
+    pushEvent(ev);
 }
