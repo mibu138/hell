@@ -17,9 +17,6 @@ static_assert(__unix__, "Only support displays on unix currently");
 
 static XcbWindow xcbWindow;
 
-static uint32_t windowWidth;
-static uint32_t windowHeight;
-
 static char windowName[32] = "floating";
 static xcb_key_symbols_t* pXcbKeySymbols;
 
@@ -94,8 +91,6 @@ static Hell_I_ResizeData getResizeData(const xcb_generic_event_t* event)
     Hell_I_ResizeData data = {0};
     data.height = resize->height;
     data.width  = resize->width;
-    window.width  = resize->width;
-    window.height = resize->height;
     return data;
 }
 
@@ -105,8 +100,6 @@ static Hell_I_ResizeData getConfigureData(const xcb_generic_event_t* event)
     Hell_I_ResizeData data = {0};
     data.height = resize->height;
     data.width  = resize->width;
-    window.width           = resize->width;
-    window.height          = resize->height;
     return data;
 }
 
@@ -117,8 +110,8 @@ static void initXcbWindow(const uint16_t width, const uint16_t height, const cha
         assert(strnlen(name, 32) < 32);
         strcpy(windowName, name);
     }
-    windowWidth  = width;
-    windowHeight = height;
+    window.width  = width;
+    window.height = height;
     int screenNum = 0;
     xcbWindow.connection =     xcb_connect(NULL, &screenNum);
     xcbWindow.window     =     xcb_generate_id(xcbWindow.connection);
@@ -244,6 +237,10 @@ start:
             case XCB_RESIZE_REQUEST:
             {
                 Hell_I_ResizeData data = getResizeData(xEvent);
+                if (data.width == window.width && data.height == window.height)
+                    break;
+                window.width = data.width;
+                window.height = data.height;
                 hell_i_PushWindowResizeEvent(data.width, data.height);
                 break;
             }
@@ -252,6 +249,10 @@ start:
             case XCB_CONFIGURE_NOTIFY: 
             {
                 Hell_I_ResizeData data = getConfigureData(xEvent);
+                if (data.width == window.width && data.height == window.height)
+                    break;
+                window.width = data.width;
+                window.height = data.height;
                 hell_i_PushWindowResizeEvent(data.width, data.height);
                 break;
             }
