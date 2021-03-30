@@ -56,7 +56,7 @@ typedef bool (*Hell_I_SubscriberFn)(const Hell_I_Event*);
 void hell_i_Init(void);
 void hell_i_PumpEvents(void);
 void hell_i_DrainEvents(void);
-void hell_I_Subscribe(Hell_I_SubscriberFn func, Hell_I_EventMask mask);
+void hell_i_Subscribe(Hell_I_SubscriberFn func, Hell_I_EventMask mask);
 
 void hell_i_PushWindowResizeEvent(unsigned int width, unsigned int height);
 void hell_i_PushMouseDownEvent(int16_t x, int16_t y, uint8_t buttonCode);

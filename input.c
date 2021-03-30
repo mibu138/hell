@@ -196,7 +196,7 @@ void hell_i_DrainEvents(void)
     for ( ; eventTail != eventHead; eventTail = (eventTail + 1) % MAX_QUEUE_EVENTS) 
     {
         event = &eventQueue[eventTail];   
-        hell_Announce("Event: type %d time %ld \n", event->type, event->time);
+        //hell_Announce("Event: type %d time %ld \n", event->type, event->time);
         if (event->type == HELL_I_CONSOLE)
         {
             hell_c_AddNText(event->ptr, event->ptrLen);
@@ -211,7 +211,7 @@ void hell_i_DrainEvents(void)
     }
 }
 
-void hell_I_Subscribe(Hell_I_SubscriberFn func, Hell_I_EventMask mask)
+void hell_i_Subscribe(Hell_I_SubscriberFn func, Hell_I_EventMask mask)
 {
     subscriptions[subscriberCount++] = (Hell_I_Subscription){func, mask};
 }
