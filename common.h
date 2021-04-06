@@ -8,6 +8,8 @@ typedef enum {
 } Hell_ErrorCode;
 
 void     hell_Print(const char* fmt, ...);
+void     hell_Print_Vec3(const float[3]);
+void     hell_Print_Mat4(const float[4][4]);
 void     hell_DPrint(const char* fmt, ...);
 void     hell_Announce(const char* fmt, ...);
 void     hell_Error( Hell_ErrorCode code, const char *fmt, ... );

@@ -101,3 +101,20 @@ void hell_BytePrint(const void* const thing, const uint32_t byteCount)
     }
     putchar('\n');
 }
+
+void hell_Print_Vec3(const float v[3])
+{
+    hell_Print("[ %f, %f, %f]", v[0], v[1], v[2]);
+}
+
+void hell_Print_Mat4(const float m[4][4])
+{
+    for (int i = 0; i < 4; i++) 
+    {
+        for (int j = 0; j < 4; j++) 
+        {
+            printf("%f ", m[i][j]);
+        }
+        printf("\n");
+    }
+}
