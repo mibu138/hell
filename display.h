@@ -2,7 +2,8 @@
 #define HELL_DISPLAY_H
 
 typedef enum {
-    HELL_WINDOW_XCB_TYPE
+    HELL_WINDOW_XCB_TYPE,
+    HELL_WINDOW_WIN32_TYPE
 } Hell_WindowType;
 
 typedef struct {

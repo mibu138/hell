@@ -4,7 +4,6 @@
 #include "cmd.h"
 #include "mem.h"
 #include <fcntl.h>
-#include <termios.h>
 #include <assert.h>
 #include <unistd.h>
 #include <memory.h>
@@ -12,7 +11,13 @@
 #include <stdbool.h>
 #include <time.h>
 #include "private.h"
+#include "platform.h"
 //
+#ifdef UNIX
+#include <termios.h>
+static struct termios origTc; // stash the tc at program start here so we can reset it on shut down
+#endif
+
 
 static_assert(sizeof(Hell_I_EventType) == 4, "sizeof(Hell_I_EventType) should be 4");
 static_assert(sizeof(Hell_I_EventMask) == 4, "sizeof(Hell_I_EventMask) should be 4");
@@ -38,7 +43,6 @@ typedef struct {
 static Hell_I_Subscription subscriptions[MAX_SUBSCRIBERS];
 static int subscriberCount;
 
-static struct termios origTc; // stash the tc at program start here so we can reset it on shut down
 static bool   consoleActive;
 
 //
@@ -103,11 +107,11 @@ static void ttyBack(void)
 
 static void initConsoleInput(void)
 {
+#ifdef UNIX
     fcntl(0, F_SETFL, fcntl (0, F_GETFL, 0) | FNDELAY);
     struct termios tc;
     if(isatty(STDIN_FILENO)!=1)
         hell_Error(0, "stdin is not a tty, tty console mode failed");
-    hell_Announce("Started console.\n");
     if (tcgetattr(0, &tc) != 0)
         hell_Error(0, "tcgetattr failed");
     origTc = tc;
@@ -118,6 +122,9 @@ static void initConsoleInput(void)
     tc.c_cc[VMIN] = 1;
     tc.c_cc[VTIME] = 0;
     tcsetattr(0, TCSADRAIN, &tc);
+#elif defined(WINDOWS)
+#endif
+    hell_Announce("Started console.\n");
 }
 
 static char* getConsoleInput(void)
@@ -162,18 +169,6 @@ static void pushEvent(Hell_I_Event event)
 {
     eventQueue[eventHead] = event;
     eventHead = (eventHead + 1) % MAX_QUEUE_EVENTS;
-}
-
-void hell_i_PushWindowResizeEvent(unsigned int width, unsigned int height)
-{
-    Hell_I_Event ev = {
-        .time = hell_Time(),
-        .type = HELL_I_RESIZE,
-        .mask = HELL_I_WINDOW_BIT
-    };
-    ev.data.resizeData.width = width;
-    ev.data.resizeData.height = height;
-    pushEvent(ev);
 }
 
 void hell_i_Init(bool initConsole)
@@ -239,6 +234,7 @@ uint64_t hell_Time()
 
 void hell_i_PushMouseDownEvent(int16_t x, int16_t y, uint8_t buttonCode)
 {
+    hell_Print("Mouse down event!\n");
     Hell_I_Event ev = {
         .type = HELL_I_MOUSEDOWN,
         .mask = HELL_I_MOUSE_BIT,
@@ -252,6 +248,7 @@ void hell_i_PushMouseDownEvent(int16_t x, int16_t y, uint8_t buttonCode)
 
 void hell_i_PushMouseUpEvent(int16_t x, int16_t y, uint8_t buttonCode)
 {
+    hell_Print("Mouse up event!\n");
     Hell_I_Event ev = {
         .type = HELL_I_MOUSEUP,
         .mask = HELL_I_MOUSE_BIT,
@@ -265,6 +262,7 @@ void hell_i_PushMouseUpEvent(int16_t x, int16_t y, uint8_t buttonCode)
 
 void hell_i_PushMouseMotionEvent(int16_t x, int16_t y, uint8_t buttonCode)
 {
+    hell_Print("Mouse motion event!\n");
     Hell_I_Event ev = {
         .type = HELL_I_MOTION,
         .mask = HELL_I_MOUSE_BIT,
@@ -298,6 +296,19 @@ void hell_i_PushKeyUpEvent(uint32_t keyCode)
     pushEvent(ev);
 }
 
+void hell_i_PushWindowResizeEvent(unsigned int width, unsigned int height)
+{
+    hell_Print("Window resize event\n");
+    Hell_I_Event ev = {
+        .time = hell_Time(),
+        .type = HELL_I_RESIZE,
+        .mask = HELL_I_WINDOW_BIT
+    };
+    ev.data.resizeData.width = width;
+    ev.data.resizeData.height = height;
+    pushEvent(ev);
+}
+
 void hell_i_PushEmptyEvent(void)
 {
     Hell_I_Event ev = {
@@ -319,8 +330,10 @@ void hell_i_CleanUp(void)
     memset(&ttyConsole, 0, sizeof(ttyConsole));
     if (consoleActive)
     {
+        #ifdef UNIX
         tcsetattr(0, TCSADRAIN, &origTc);
         fcntl(0, F_SETFL, fcntl (0, F_GETFL, 0) & ~FNDELAY);
+        #endif
     }
     hell_Announce("Input shutdown.\n");
 }
