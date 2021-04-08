@@ -5,6 +5,7 @@
 #include <assert.h>
 #include "common.h"
 #include "platform.h"
+#include <unistd.h>
 
 #ifdef UNIX
 #include <dlfcn.h>
@@ -135,11 +136,19 @@ void*    hell_LoadLibrary(const char* name)
     #endif
 }
 
-void*    hell_LoadSym(void* module, const char* symname)
+void*    hell_LoadSymbol(void* module, const char* symname)
 {
     #ifdef UNIX
     return dlsym(module, symname);
     #elif defined(WINDOWS)
     return GetProcAddress(module, symname);
     #endif
+}
+
+bool hell_FileExists(const char* path)
+{
+    if (access(path, F_OK) == 0)
+        return true;
+    else 
+        return false;
 }

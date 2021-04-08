@@ -31,12 +31,14 @@ const Hell_Window* hell_d_Init(const uint16_t width, const uint16_t height, cons
 
 void hell_d_DrainWindowEvents(void)
 {
-    //if (window.typeSpecificData) // used to it is active
+    if (window.typeSpecificData) // used to it is active
+    {
     #if defined(UNIX)
         drainXcbEventQueue(&window);
     #elif defined(WINDOWS)
         drainMsEventQueue();
     #endif
+    }
 }
 
 void hell_d_CleanUp(void)

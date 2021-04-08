@@ -2,6 +2,7 @@
 #define HELL_COMMON_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef enum {
 	HELL_ERR_FATAL, 
@@ -21,6 +22,8 @@ void     hell_BytePrint(const void* const thing, const uint32_t byteCount);
 
 // platform agnostic library loading
 void*    hell_LoadLibrary(const char* name);
-void*    hell_LoadSym(void* module, const char* symname);
+void*    hell_LoadSymbol(void* module, const char* symname);
+
+bool     hell_FileExists(const char* path);
 
 #endif /* end of include guard: HELL_COM_H */
