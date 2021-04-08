@@ -4,10 +4,23 @@
 #include <xcb/xproto.h>
 #include <X11/keysym.h>
 #include <xcb/xcb.h>
+#include "evcodes.h"
+#include "input.h"
+#include "display.h"
+#include "platform.h"
+#include "common.h"
+#include <assert.h>
+#include <string.h>
+#include <stdlib.h>
 
-static_assert(__unix__, "Only support displays on unix currently");
+#ifndef UNIX
+#error "Must be on a unix platform to use xcb windows"
+#endif
+
+#define MAX_WIN_NAME 32
 
 static XcbWindow xcbWindow;
+static char windowName[MAX_WIN_NAME] = "floating";
 
 static xcb_key_symbols_t* pXcbKeySymbols;
 
@@ -92,15 +105,15 @@ inline static Hell_I_ResizeData getXcbConfigureData(const xcb_generic_event_t* e
     return data;
 }
 
-inline static void initXcbWindow(const uint16_t width, const uint16_t height, const char* name)
+inline static void initXcbWindow(const uint16_t width, const uint16_t height, const char* name, Hell_Window* window)
 {
     if (name)
     {
-        assert(strnlen(name, 32) < 32);
-        strcpy(windowName, name);
+        assert(strnlen(name, MAX_WIN_NAME) < MAX_WIN_NAME);
+        strncpy(windowName, name, MAX_WIN_NAME);
     }
-    window.width  = width;
-    window.height = height;
+    window->width  = width;
+    window->height = height;
     int screenNum = 0;
     xcbWindow.connection =     xcb_connect(NULL, &screenNum);
     xcbWindow.window     =     xcb_generate_id(xcbWindow.connection);
@@ -153,13 +166,13 @@ inline static void initXcbWindow(const uint16_t width, const uint16_t height, co
     pXcbKeySymbols = xcb_key_symbols_alloc(xcbWindow.connection);
     hell_Announce("Xcb Display initialized.\n");
 
-    window.width            = width;
-    window.height           = height;
-    window.type             = HELL_WINDOW_XCB_TYPE;
-    window.typeSpecificData = &xcbWindow;
+    window->width            = width;
+    window->height           = height;
+    window->type             = HELL_WINDOW_XCB_TYPE;
+    window->typeSpecificData = &xcbWindow;
 }
 
-inline static void drainXcbEventQueue(void)
+inline static void drainXcbEventQueue(Hell_Window* window)
 {
     xcb_generic_event_t* xEvent = NULL;
     while ((xEvent = xcb_poll_for_event(xcbWindow.connection)))
@@ -169,7 +182,7 @@ start:
         {
             case XCB_KEY_PRESS: 
             {
-                uint32_t keyCode = getKeyCode((xcb_key_press_event_t*)xEvent);
+                uint32_t keyCode = getXcbKeyCode((xcb_key_press_event_t*)xEvent);
                 if (keyCode != 0)
                     hell_i_PushKeyDownEvent(keyCode);
                 break;
@@ -182,14 +195,14 @@ start:
                 // its unclear to me whether very rapidly hitting a key could
                 // result in the same thing, and wheter it is worthwhile 
                 // accounting for that
-                uint32_t keyCode = getKeyCode((xcb_key_press_event_t*)xEvent);
+                uint32_t keyCode = getXcbKeyCode((xcb_key_press_event_t*)xEvent);
                 if (keyCode == 0) break;
                 // need to see if this is actually an auto repeat
                 xcb_generic_event_t* next = xcb_poll_for_event(xcbWindow.connection);
                 if (next) 
                 {
                     uint8_t type = XCB_EVENT_RESPONSE_TYPE(next);
-                    uint32_t keyCodeNext = getKeyCode((xcb_key_press_event_t*)next);
+                    uint32_t keyCodeNext = getXcbKeyCode((xcb_key_press_event_t*)next);
                     // if next is not a press or the key code is different then neither are autorepeats
                     if (type != XCB_KEY_PRESS || keyCode != keyCodeNext)
                     {
@@ -207,29 +220,29 @@ start:
             }
             case XCB_BUTTON_PRESS:
             {
-                Hell_I_MouseData data = getMouseData(xEvent);
+                Hell_I_MouseData data = getXcbMouseData(xEvent);
                 hell_i_PushMouseDownEvent(data.x, data.y, data.buttonCode);
                 break;
             }
             case XCB_BUTTON_RELEASE:
             {
-                Hell_I_MouseData data = getMouseData(xEvent);
+                Hell_I_MouseData data = getXcbMouseData(xEvent);
                 hell_i_PushMouseUpEvent(data.x, data.y, data.buttonCode);
                 break;
             }
             case XCB_MOTION_NOTIFY:
             {
-                Hell_I_MouseData data = getMouseData(xEvent);
+                Hell_I_MouseData data = getXcbMouseData(xEvent);
                 hell_i_PushMouseMotionEvent(data.x, data.y, data.buttonCode);
                 break;
             }
             case XCB_RESIZE_REQUEST:
             {
-                Hell_I_ResizeData data = getResizeData(xEvent);
-                if (data.width == window.width && data.height == window.height)
+                Hell_I_ResizeData data = getXcbResizeData(xEvent);
+                if (data.width == window->width && data.height == window->height)
                     break;
-                window.width = data.width;
-                window.height = data.height;
+                window->width = data.width;
+                window->height = data.height;
                 hell_i_PushWindowResizeEvent(data.width, data.height);
                 break;
             }
@@ -237,11 +250,11 @@ start:
             // TODO: throw out window moves.
             case XCB_CONFIGURE_NOTIFY: 
             {
-                Hell_I_ResizeData data = getConfigureData(xEvent);
-                if (data.width == window.width && data.height == window.height)
+                Hell_I_ResizeData data = getXcbConfigureData(xEvent);
+                if (data.width == window->width && data.height == window->height)
                     break;
-                window.width = data.width;
-                window.height = data.height;
+                window->width = data.width;
+                window->height = data.height;
                 hell_i_PushWindowResizeEvent(data.width, data.height);
                 break;
             }
@@ -251,7 +264,7 @@ start:
     }
 }
 
-inline static void xcbCleanUp(void)
+inline static void cleanUpXcb(void)
 {
     xcb_key_symbols_free(pXcbKeySymbols);
     xcb_flush(xcbWindow.connection);

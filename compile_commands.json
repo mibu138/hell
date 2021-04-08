@@ -1,0 +1,15 @@
+[
+    {
+        "arguments": [
+            "gcc",
+            "-c",
+            "-Wall",
+            "-fPIC",
+            "-o",
+            "build/display.o",
+            "display.c"
+        ],
+        "directory": "/home/michaelb/dev/hell",
+        "file": "display.c"
+    }
+]

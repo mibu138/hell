@@ -129,7 +129,7 @@ void hell_Print_Mat4(const float m[4][4])
 void*    hell_LoadLibrary(const char* name)
 {
     #ifdef UNIX
-    return dlopen(name);
+    return dlopen(name, RTLD_LAZY);
     #elif defined(WINDOWS)
     return LoadLibrary(name);
     #endif

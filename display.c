@@ -22,7 +22,7 @@ const Hell_Window* hell_d_Init(const uint16_t width, const uint16_t height, cons
 {
     // once we support other platforms we can put a switch in here
     #if defined(UNIX)
-    initXcbWindow(width, height, name);
+    initXcbWindow(width, height, name, &window);
     #elif defined(WINDOWS)
     initMsWindow(width, height, name, &window);
     #endif
@@ -33,7 +33,7 @@ void hell_d_DrainWindowEvents(void)
 {
     //if (window.typeSpecificData) // used to it is active
     #if defined(UNIX)
-        drainXcbEventQueue();
+        drainXcbEventQueue(&window);
     #elif defined(WINDOWS)
         drainMsEventQueue();
     #endif

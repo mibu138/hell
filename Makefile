@@ -10,8 +10,6 @@ CFLAGS    = -Wall -fPIC
 O         = build
 H         = .
 LIBS      = 
-UNIX_LIBS = -lxcb -lxcb-keysyms
-WIN_LIBS  = 
 WIN_HEADERS = $(H)/win32_window.h
 UNIX_HEADERS = $(H)/unix_window.h
 ifeq ($(OS), WIN)
@@ -22,7 +20,7 @@ ifeq ($(OS), WIN)
 else
 	OS_HEADERS = $(UNIX_HEADERS)
 	LIBEXT = so
-	LIBS += $(UNIX_LIBS)
+	LIBS += -lxcb -lxcb-keysyms -ldl
 	HOMEDIR =  $(HOME)
 endif
 LIBDIR    = $(HOMEDIR)/lib
