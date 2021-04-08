@@ -4,6 +4,13 @@
 #include <errno.h>
 #include <assert.h>
 #include "common.h"
+#include "platform.h"
+
+#ifdef UNIX
+#include <dlfcn.h>
+#elif defined(WINDOWS)
+#include <winbase.h>
+#endif
 
 #define MAX_PRINT_MSG 256
 
@@ -117,4 +124,22 @@ void hell_Print_Mat4(const float m[4][4])
         }
         printf("\n");
     }
+}
+
+void*    hell_LoadLibrary(const char* name)
+{
+    #ifdef UNIX
+    return dlopen(name);
+    #elif defined(WINDOWS)
+    return LoadLibrary(name);
+    #endif
+}
+
+void*    hell_LoadSym(void* module, const char* symname)
+{
+    #ifdef UNIX
+    return dlsym(module, symname);
+    #elif defined(WINDOWS)
+    return GetProcAddress(module, symname);
+    #endif
 }

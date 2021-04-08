@@ -9,7 +9,7 @@
 #include "win_local.h"
 #include "win32_window_type.h"
 #include <assert.h>
-#include "evcode.h"
+#include "evcodes.h"
 
 static Win32Window win32Window;
 
@@ -78,6 +78,10 @@ inline static int initMsWindow(int width, int height, const char* name, Hell_Win
     ShowWindow(win32Window.hwnd, SW_SHOWNORMAL);
     UpdateWindow(win32Window.hwnd);
 
+    hellWindow->type = HELL_WINDOW_WIN32_TYPE;
+    hellWindow->width = width;
+    hellWindow->height = height;
+    hellWindow->typeSpecificData = &win32Window;
 
     return 0;
 

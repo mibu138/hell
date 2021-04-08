@@ -19,4 +19,8 @@ uint64_t hell_Align(const uint64_t quantity, const uint32_t alignment);
 void     hell_BitPrint(const void* const thing,  const uint32_t bitcount);
 void     hell_BytePrint(const void* const thing, const uint32_t byteCount);
 
+// platform agnostic library loading
+void*    hell_LoadLibrary(const char* name);
+void*    hell_LoadSym(void* module, const char* symname);
+
 #endif /* end of include guard: HELL_COM_H */
