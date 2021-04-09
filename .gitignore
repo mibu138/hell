@@ -2,3 +2,4 @@ hell
 build/*
 helltest
 .clangd
+helltest.exe

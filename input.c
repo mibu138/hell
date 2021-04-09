@@ -5,6 +5,7 @@
 #include "mem.h"
 #include <fcntl.h>
 #include <assert.h>
+#include <profileapi.h>
 #include <unistd.h>
 #include <memory.h>
 #include <stdint.h>
@@ -16,12 +17,13 @@
 #ifdef UNIX
 #include <termios.h>
 static struct termios origTc; // stash the tc at program start here so we can reset it on shut down
+#elif defined(WINDOWS)
+#include <windows.h>
 #endif
-
 
 static_assert(sizeof(Hell_I_EventType) == 4, "sizeof(Hell_I_EventType) should be 4");
 static_assert(sizeof(Hell_I_EventMask) == 4, "sizeof(Hell_I_EventMask) should be 4");
-static_assert(sizeof(Hell_I_Event) == 32,    "sizeof(Hell_I_Event) should be 32, to allow 2 events to be read with each cacheline read (assuming the event queue is aligned well)");
+//static_assert(sizeof(Hell_I_Event) == 32,    "sizeof(Hell_I_Event) should be 32, to allow 2 events to be read with each cacheline read (assuming the event queue is aligned well)");
 
 typedef struct {
 	int		cursor;
@@ -63,6 +65,7 @@ static Field ttyConsole;
 
 static_assert (STDIN_FILENO == 0, "We assume the the fd for stdin is 0");
 
+#ifdef UNIX
 static struct timespec unixEpoch;
 #define UNIX_CLOCK_ID CLOCK_MONOTONIC
 
@@ -81,9 +84,40 @@ static uint64_t getUnixMicroSeconds(void)
     return ms;
 }
 
+#elif defined(WINDOWS)
+
+static LARGE_INTEGER winEpoch;
+static LARGE_INTEGER winFreq;
+
+static void initWinTime(void)
+{
+    QueryPerformanceFrequency(&winFreq);
+    QueryPerformanceCounter(&winEpoch);
+}
+
+static uint64_t getWinMicroSeconds(void)
+{
+    LARGE_INTEGER curTicks, elapsedTime;
+    QueryPerformanceCounter(&curTicks);
+    elapsedTime.QuadPart  = curTicks.QuadPart - winEpoch.QuadPart;
+    elapsedTime.QuadPart *= 1000000;
+    elapsedTime.QuadPart /= winFreq.QuadPart;
+    return elapsedTime.QuadPart;
+}
+
+#else 
+#error
+#endif
+
 static void initTime(void)
 {
+#ifdef UNIX
     initUnixTime();
+#elif defined(WINDOWS)
+    initWinTime();
+#else
+#error
+#endif
 }
 
 static void fieldClear(Field* field)
@@ -229,7 +263,11 @@ void hell_i_Subscribe(Hell_I_SubscriberFn func, Hell_I_EventMask mask)
 
 uint64_t hell_Time()
 {
+#ifdef UNIX
     return getUnixMicroSeconds();
+#elif defined(WINDOWS)
+    return getWinMicroSeconds();
+#endif
 }
 
 void hell_i_PushMouseDownEvent(int16_t x, int16_t y, uint8_t buttonCode)
@@ -324,7 +362,6 @@ void hell_i_CleanUp(void)
     memset(eventQueue, 0, sizeof(eventQueue));
     eventHead = 0;
     eventTail = 0;
-    memset(&unixEpoch, 0, sizeof(unixEpoch));
     ttyEofCode = 0;
     ttyEofCode = 0;
     memset(&ttyConsole, 0, sizeof(ttyConsole));
