@@ -5,7 +5,6 @@
 #include "mem.h"
 #include <fcntl.h>
 #include <assert.h>
-#include <profileapi.h>
 #include <unistd.h>
 #include <memory.h>
 #include <stdint.h>

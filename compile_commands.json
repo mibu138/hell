@@ -1,7 +1,7 @@
 [
     {
         "arguments": [
-            "i686-w64-mingw32-gcc",
+            "gcc",
             "-c",
             "-Wall",
             "-fPIC",
@@ -14,33 +14,7 @@
     },
     {
         "arguments": [
-            "i686-w64-mingw32-gcc",
-            "-c",
-            "-Wall",
-            "-fPIC",
-            "-o",
-            "build/common.o",
-            "common.c"
-        ],
-        "directory": "/home/michaelb/dev/hell",
-        "file": "common.c"
-    },
-    {
-        "arguments": [
-            "i686-w64-mingw32-gcc",
-            "-c",
-            "-Wall",
-            "-fPIC",
-            "-o",
-            "build/mem.o",
-            "mem.c"
-        ],
-        "directory": "/home/michaelb/dev/hell",
-        "file": "mem.c"
-    },
-    {
-        "arguments": [
-            "i686-w64-mingw32-gcc",
+            "gcc",
             "-c",
             "-Wall",
             "-fPIC",
@@ -50,18 +24,5 @@
         ],
         "directory": "/home/michaelb/dev/hell",
         "file": "input.c"
-    },
-    {
-        "arguments": [
-            "i686-w64-mingw32-gcc",
-            "-c",
-            "-Wall",
-            "-fPIC",
-            "-o",
-            "build/cmd.o",
-            "cmd.c"
-        ],
-        "directory": "/home/michaelb/dev/hell",
-        "file": "cmd.c"
     }
 ]
