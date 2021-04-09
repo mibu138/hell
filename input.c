@@ -100,7 +100,9 @@ static uint64_t getWinMicroSeconds(void)
     QueryPerformanceCounter(&curTicks);
     elapsedTime.QuadPart  = curTicks.QuadPart - winEpoch.QuadPart;
     elapsedTime.QuadPart *= 1000000;
+    assert(winFreq.QuadPart > 0);
     elapsedTime.QuadPart /= winFreq.QuadPart;
+    hell_DPrint("Got windows time!\n");
     return elapsedTime.QuadPart;
 }
 

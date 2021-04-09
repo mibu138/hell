@@ -1,3 +1,9 @@
+ifeq ($(OS), Windows_NT)
+	OS = WIN
+else 
+	OS = UNIX
+endif
+
 CC        = gcc
 NAME      = hell
 CFLAGS    = -Wall -fPIC
@@ -6,17 +12,11 @@ H         = .
 LIBS      = 
 WIN_HEADERS = $(H)/win32_window.h
 UNIX_HEADERS = $(H)/unix_window.h
-ifeq ($(W), 1) #mingw32 on linux
-	CC = i686-w64-mingw32-gcc
+ifeq ($(OS), WIN)
 	OS_HEADERS = $(WIN_HEADERS)
 	LIBEXT = dll
 	XEXT = .exe
-	HOMEDIR = $(HOME)
-else ifeq ($(OS), WIN)
-	OS_HEADERS = $(WIN_HEADERS)
-	LIBEXT = dll
-	XEXT = .exe
-	HOMEDIR =  "$(HOMEDRIVE)/$(HOMEPATH)"
+	HOMEDIR = C:
 else
 	OS_HEADERS = $(UNIX_HEADERS)
 	LIBEXT = so
