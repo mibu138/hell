@@ -2,22 +2,28 @@
 #include "mem.h"
 #include "common.h"
 #include "error.h"
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
 #include "private.h"
 
-typedef void (*H_CommandFn)(void);
+typedef void (*CommandFn)(void);
 
 #define MAX_CMD_NAME_LEN 32
 
-typedef struct CmdFunction_s {
-    struct CmdFunction_s* next;
-    char                  name[MAX_CMD_NAME_LEN];
-    H_CommandFn           function;
-} CmdFunction;
+typedef uint32_t VarFlags;
 
-static CmdFunction* cmdFunctions;
+typedef struct Cmd {
+    struct Cmd* next;
+    char        name[MAX_CMD_NAME_LEN];
+    CommandFn   function;
+} Cmd;
+
+typedef Hell_C_Var Var;
+
+static Cmd*  commands;
+static Var* variables;
 
 #define	MAX_CMD_BUFFER	16384
 #define	MAX_CMD_LINE	1024
@@ -39,7 +45,7 @@ static void cmdListFn(void)
     // if (cmdArgc > 1)
     //     match = cmdArgv[1];
 
-    for (CmdFunction* cmd = cmdFunctions; cmd; cmd = cmd->next)
+    for (Cmd* cmd = commands; cmd; cmd = cmd->next)
         hell_Print("%s\n", cmd->name);
 }
 
@@ -48,6 +54,18 @@ static void cmdEchoFn(void)
 	for (int i=1 ; i<cmdArgc ; i++)
 		hell_Print("%s ", cmdArgv[i]);
 	hell_Print("\n");
+}
+
+static void varListFn(void)
+{
+    for (Var* var = variables; var; var = var->next)
+    {
+        hell_Print("%s: %f\n", var->name, var->value);
+    }
+}
+
+static void varSetFn(void)
+{
 }
 
 static void tokenizeString(const char* text)
@@ -81,14 +99,14 @@ static void tokenizeString(const char* text)
 
 static void execute(const char* line)
 {
-    CmdFunction *cmd, **prev;
+    Cmd *cmd, **prev;
     tokenizeString(line);
     if (!cmdArgc)
     {
         return;
     }
 
-	for ( prev = &cmdFunctions ; *prev ; prev = &cmd->next ) 
+	for ( prev = &commands; *prev ; prev = &cmd->next ) 
     {
 		cmd = *prev;
 		if ( strncmp(cmdArgv[0],cmd->name, MAX_CMD_NAME_LEN) == 0 ) 
@@ -96,8 +114,8 @@ static void execute(const char* line)
 			// rearrange the links so that the command will be
 			// near the head of the list next time it is used
 			*prev = cmd->next;
-			cmd->next = cmdFunctions;
-			cmdFunctions = cmd;
+			cmd->next = commands;
+			commands = cmd;
 
 			// perform the action
 			if ( !cmd->function ) {
@@ -111,6 +129,28 @@ static void execute(const char* line)
 	}
 }
 
+static void cmdInit(void)
+{
+	hell_c_AddCommand("cmdlist", cmdListFn);
+	hell_c_AddCommand("echo",    cmdEchoFn);
+}
+
+static void varInit(void)
+{
+    hell_c_AddCommand("varlist", varListFn);
+	hell_c_AddCommand("set", varSetFn);
+}
+
+static Var* findVar(const char* name)
+{
+    for (Var* var = variables; var; var = var->next)
+    {
+        if (strcmp(name, var->name) == 0)
+            return var;
+    }
+    return NULL;
+}
+
 char* hell_c_Argv(unsigned int i)
 {
     if (i >= cmdArgc)
@@ -118,11 +158,11 @@ char* hell_c_Argv(unsigned int i)
     return cmdArgv[i];
 }
 
-void hell_c_AddCommand(char* cmdName, Hell_C_CommandFn function)
+void hell_c_AddCommand(const char* cmdName, Hell_C_CmdFn function)
 {
     assert(strnlen(cmdName, MAX_CMD_NAME_LEN) < MAX_CMD_NAME_LEN);
-    CmdFunction* cmd;
-	for (cmd = cmdFunctions; cmd; cmd = cmd->next)
+    Cmd* cmd;
+	for (cmd = commands; cmd; cmd = cmd->next)
 	{
 		if (!strncmp(cmdName, cmd->name, MAX_CMD_NAME_LEN))
 		{
@@ -131,16 +171,42 @@ void hell_c_AddCommand(char* cmdName, Hell_C_CommandFn function)
 		}
 	}
 
-    cmd = hell_m_Alloc(sizeof(CmdFunction));
+    cmd = hell_m_Alloc(sizeof(Cmd));
     strncpy(cmd->name, cmdName, MAX_CMD_NAME_LEN);
     cmd->function = function;
 
 	/* link the command in by name order */
-    CmdFunction** pos = &cmdFunctions;
+    Cmd** pos = &commands;
     while (*pos && strcmp((*pos)->name, cmdName) < 0)
         pos = &(*pos)->next;
     cmd->next = *pos;
     *pos = cmd;
+}
+
+const Var* hell_c_GetVar(const char* name, const char* value, const VarFlags flags)
+{
+    Var* var = findVar(name);
+    if (var)
+    {
+        var->flags |= flags;
+        return var;
+    }
+
+    var = hell_m_Alloc(sizeof(Var));
+    var->name = hell_m_CopyString(name);
+    var->string = hell_m_CopyString(value);
+    var->default_string = hell_m_CopyString(value);
+    var->modified = true;
+    var->value = strtof(var->string, NULL);
+
+    Var** pos = &variables;
+    while (*pos && strcmp((*pos)->name, var->name) < 0)
+        pos = &(*pos)->next;
+    var->next = *pos;
+    *pos = var;
+
+    var->flags = flags;
+    return var;
 }
 
 void hell_c_AddText(const char* text)
@@ -174,8 +240,8 @@ void hell_c_AddChar(const char c)
 
 void hell_c_Init(void)
 {
-	hell_c_AddCommand("cmdlist", cmdListFn);
-	hell_c_AddCommand("echo",    cmdEchoFn);
+    cmdInit();
+    varInit();
 }
 
 void hell_c_Execute(void)

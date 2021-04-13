@@ -4,7 +4,10 @@
 #include <errno.h>
 #include <assert.h>
 #include "common.h"
+#include "input.h"
 #include "platform.h"
+#include "cmd.h"
+#include "window.h"
 #include <unistd.h>
 
 #ifdef UNIX
@@ -151,4 +154,10 @@ bool hell_FileExists(const char* path)
         return true;
     else 
         return false;
+}
+
+void hell_Sleep(double s)
+{
+    uint64_t us = (s * 1000000);
+    usleep(us);
 }

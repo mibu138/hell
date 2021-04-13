@@ -2,6 +2,7 @@
 #define HELL_MS_WINDOW_H
 
 #include <windows.h>
+#include "window.h"
 #include <windowsx.h>
 #include <tchar.h>
 #include <stdio.h>

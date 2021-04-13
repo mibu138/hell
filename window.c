@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include "display.h"
+#include "window.h"
 #include "common.h"
 #include "evcodes.h"
 #include "input.h"
@@ -18,7 +18,7 @@ HellWinVars winVars;
 
 static Hell_Window window;
 
-const Hell_Window* hell_d_Init(const uint16_t width, const uint16_t height, const char* name)
+const Hell_Window* hell_w_Init(const uint16_t width, const uint16_t height, const char* name)
 {
     // once we support other platforms we can put a switch in here
     #if defined(UNIX)
@@ -29,7 +29,7 @@ const Hell_Window* hell_d_Init(const uint16_t width, const uint16_t height, cons
     return &window;
 }
 
-void hell_d_DrainWindowEvents(void)
+void hell_w_DrainWindowEvents(void)
 {
     if (window.typeSpecificData) // used to it is active
     {
@@ -41,7 +41,7 @@ void hell_d_DrainWindowEvents(void)
     }
 }
 
-void hell_d_CleanUp(void)
+void hell_w_CleanUp(void)
 {
     #if defined(UNIX)
     cleanUpXcb();

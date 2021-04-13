@@ -1,5 +1,5 @@
+#include "window.h"
 #include "input.h"
-#include "display.h"
 #include "common.h"
 #include "cmd.h"
 #include "mem.h"
@@ -22,7 +22,7 @@ static struct termios origTc; // stash the tc at program start here so we can re
 
 static_assert(sizeof(Hell_I_EventType) == 4, "sizeof(Hell_I_EventType) should be 4");
 static_assert(sizeof(Hell_I_EventMask) == 4, "sizeof(Hell_I_EventMask) should be 4");
-//static_assert(sizeof(Hell_I_Event) == 32,    "sizeof(Hell_I_Event) should be 32, to allow 2 events to be read with each cacheline read (assuming the event queue is aligned well)");
+static_assert(sizeof(Hell_I_Event) == 32,    "sizeof(Hell_I_Event) should be 32, to allow 2 events to be read with each cacheline read (assuming the event queue is aligned well)");
 
 typedef struct {
 	int		cursor;
@@ -102,7 +102,6 @@ static uint64_t getWinMicroSeconds(void)
     elapsedTime.QuadPart *= 1000000;
     assert(winFreq.QuadPart > 0);
     elapsedTime.QuadPart /= winFreq.QuadPart;
-    hell_DPrint("Got windows time!\n");
     return elapsedTime.QuadPart;
 }
 
@@ -232,7 +231,7 @@ void hell_i_PumpEvents(void)
         ev.time = hell_Time();
         pushEvent(ev);
     }
-    hell_d_DrainWindowEvents();
+    hell_w_DrainWindowEvents();
 }
 
 void hell_i_DrainEvents(void)
@@ -273,7 +272,6 @@ uint64_t hell_Time()
 
 void hell_i_PushMouseDownEvent(int16_t x, int16_t y, uint8_t buttonCode)
 {
-    hell_Print("Mouse down event!\n");
     Hell_I_Event ev = {
         .type = HELL_I_MOUSEDOWN,
         .mask = HELL_I_MOUSE_BIT,
@@ -287,7 +285,6 @@ void hell_i_PushMouseDownEvent(int16_t x, int16_t y, uint8_t buttonCode)
 
 void hell_i_PushMouseUpEvent(int16_t x, int16_t y, uint8_t buttonCode)
 {
-    hell_Print("Mouse up event!\n");
     Hell_I_Event ev = {
         .type = HELL_I_MOUSEUP,
         .mask = HELL_I_MOUSE_BIT,
@@ -301,7 +298,6 @@ void hell_i_PushMouseUpEvent(int16_t x, int16_t y, uint8_t buttonCode)
 
 void hell_i_PushMouseMotionEvent(int16_t x, int16_t y, uint8_t buttonCode)
 {
-    hell_Print("Mouse motion event!\n");
     Hell_I_Event ev = {
         .type = HELL_I_MOTION,
         .mask = HELL_I_MOUSE_BIT,
@@ -337,7 +333,6 @@ void hell_i_PushKeyUpEvent(uint32_t keyCode)
 
 void hell_i_PushWindowResizeEvent(unsigned int width, unsigned int height)
 {
-    hell_Print("Window resize event\n");
     Hell_I_Event ev = {
         .time = hell_Time(),
         .type = HELL_I_RESIZE,

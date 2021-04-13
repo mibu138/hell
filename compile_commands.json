@@ -6,23 +6,10 @@
             "-Wall",
             "-fPIC",
             "-o",
-            "build/display.o",
-            "display.c"
+            "helltest",
+            "main.c"
         ],
         "directory": "/home/michaelb/dev/hell",
-        "file": "display.c"
-    },
-    {
-        "arguments": [
-            "gcc",
-            "-c",
-            "-Wall",
-            "-fPIC",
-            "-o",
-            "build/input.o",
-            "input.c"
-        ],
-        "directory": "/home/michaelb/dev/hell",
-        "file": "input.c"
+        "file": "main.c"
     }
 ]

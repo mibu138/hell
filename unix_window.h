@@ -6,7 +6,7 @@
 #include <xcb/xcb.h>
 #include "evcodes.h"
 #include "input.h"
-#include "display.h"
+#include "window.h"
 #include "platform.h"
 #include "common.h"
 #include <assert.h>

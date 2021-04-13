@@ -1,5 +1,5 @@
-#ifndef HELL_DISPLAY_H
-#define HELL_DISPLAY_H
+#ifndef HELL_WINDOW_H
+#define HELL_WINDOW_H
 
 typedef enum {
     HELL_WINDOW_XCB_TYPE,
@@ -13,9 +13,9 @@ typedef struct {
     void*           typeSpecificData;
 } Hell_Window;
 
-const Hell_Window* hell_d_Init(const unsigned short width, const unsigned short height, const char* name);
-void               hell_d_CleanUp(void);
+const Hell_Window* hell_w_Init(const unsigned short width, const unsigned short height, const char* name);
+void               hell_w_CleanUp(void);
 // does nothing if window is not active
-void               hell_d_DrainWindowEvents(void);
+void               hell_w_DrainWindowEvents(void);
 
 #endif /* end of include guard: DISPLAY_H */
