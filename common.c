@@ -8,9 +8,9 @@
 #include "platform.h"
 #include "cmd.h"
 #include "window.h"
-#include <unistd.h>
 
 #ifdef UNIX
+#include <unistd.h>
 #include <dlfcn.h>
 #elif defined(WINDOWS)
 #include <winbase.h>
@@ -150,14 +150,24 @@ void*    hell_LoadSymbol(void* module, const char* symname)
 
 bool hell_FileExists(const char* path)
 {
-    if (access(path, F_OK) == 0)
-        return true;
-    else 
-        return false;
+    #ifdef UNIX
+    return (access(path, F_OK) == 0)
+    #elif defined(WINDOWS)
+    WIN32_FIND_DATA findData;
+    HANDLE handle = FindFirstFile(path, &findData);
+    bool found = handle != INVALID_HANDLE_VALUE;
+    if (found)
+        FindClose(handle);
+    return found;
+    #endif
 }
 
 void hell_Sleep(double s)
 {
     uint64_t us = (s * 1000000);
+    #ifdef UNIX
     usleep(us);
+    #elif defined(WINDOWS)
+    Sleep(us / 1000);
+    #endif
 }

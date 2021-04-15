@@ -8,6 +8,11 @@ typedef enum {
 	HELL_ERR_FATAL, 
 } Hell_ErrorCode;
 
+struct Hell_Window;
+
+typedef void (*Hell_FrameFn)(void);
+typedef void (*Hell_ShutDownFn)(void);
+
 void     hell_Print(const char* fmt, ...);
 void     hell_Print_Vec3(const float[3]);
 void     hell_Print_Mat4(const float[4][4]);
@@ -31,7 +36,7 @@ void*    hell_LoadSymbol(void* module, const char* symname);
 bool     hell_FileExists(const char* path);
 
 // uber function that calls the individual initializers in the correct order
-void     hell_Init(void);
+void     hell_Init(bool initConsole, Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, const struct Hell_Window** window);
 
 // run run run and never return
 void     hell_Loop(void);

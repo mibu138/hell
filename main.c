@@ -16,7 +16,8 @@ static void chungus(void)
 
 void hell_Main(void)
 {
-    hell_Init();
+    const Hell_Window* window = NULL;
+    hell_Init(false, NULL, NULL, &window);
     hell_c_AddCommand("chungus", chungus);
     hell_Loop();
 }
@@ -33,6 +34,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 {
     winVars.instance = hInstance;
     hell_Main();
+    return 0;
 }
 
 #endif

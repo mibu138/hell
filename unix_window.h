@@ -1,3 +1,8 @@
+#ifndef HELL_UNIX_WINDOW_H
+#define HELL_UNIX_WINDOW_H
+
+#include "platform.h"
+#ifdef UNIX
 #include "xcb_window_type.h"
 #include <xcb/xcb_keysyms.h>
 #include <xcb/xcb_event.h>
@@ -7,7 +12,6 @@
 #include "evcodes.h"
 #include "input.h"
 #include "window.h"
-#include "platform.h"
 #include "common.h"
 #include <assert.h>
 #include <string.h>
@@ -271,3 +275,6 @@ inline static void cleanUpXcb(void)
     xcb_destroy_window(xcbWindow.connection, xcbWindow.window);
     xcb_disconnect(xcbWindow.connection);
 }
+
+#endif
+#endif

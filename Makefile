@@ -29,7 +29,7 @@ LIBPATH   = $(LIBDIR)/$(LIBNAME)
 TESTNAME  = $(NAME)test$(XEXT)
 
 HEADERS = $(H)/window.h $(H)/input.h $(H)/cmd.h $(H)/mem.h $(H)/common.h $(H)/ds.h $(H)/client.h $(H)/server.h $(H)/types.h $(OS_HEADERS)
-OBJS    = $(O)/window.o $(O)/input.o $(O)/cmd.o $(O)/mem.o $(O)/common.o $(H)/ds.o $(O)/client.o $(O)/server.o \
+OBJS    = $(O)/window.o $(O)/input.o $(O)/cmd.o $(O)/mem.o $(O)/common.o $(O)/ds.o $(O)/client.o $(O)/server.o \
 		  $(O)/frame.o
 
 all: lib test 

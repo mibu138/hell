@@ -1,16 +1,20 @@
 #ifndef HELL_MS_WINDOW_H
 #define HELL_MS_WINDOW_H
 
-#include <windows.h>
+#include "platform.h"
+#ifdef WINDOWS
+
 #include "window.h"
 #include <windowsx.h>
 #include <tchar.h>
 #include <stdio.h>
-#include "display.h"
+#include "window.h"
 #include "win_local.h"
 #include "win32_window_type.h"
 #include <assert.h>
+#include "cmd.h"
 #include "evcodes.h"
+#include "common.h"
 
 static Win32Window win32Window;
 
@@ -19,14 +23,31 @@ static Win32Window win32Window;
 // Step 4: the Window Procedure
 inline static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    static bool keyDown = false;
+    static uint32_t lastKey = 0;
     switch(msg)
     {
         case WM_CLOSE: DestroyWindow(hwnd); break;
         case WM_DESTROY: PostQuitMessage(0); break;
         case WM_LBUTTONDOWN: hell_i_PushMouseDownEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_LEFT); break;
+        case WM_RBUTTONDOWN: hell_i_PushMouseDownEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_RIGHT); break;
+        case WM_MBUTTONDOWN: hell_i_PushMouseDownEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_MID); break;
         case WM_LBUTTONUP: hell_i_PushMouseUpEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_LEFT); break;
+        case WM_RBUTTONUP: hell_i_PushMouseUpEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_RIGHT); break;
+        case WM_MBUTTONUP: hell_i_PushMouseUpEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_MID); break;
         case WM_MOUSEMOVE: hell_i_PushMouseMotionEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_LEFT); break;
         case WM_SIZE: hell_i_PushWindowResizeEvent(LOWORD(lParam), HIWORD(lParam)); break;
+        case WM_KEYDOWN: keyDown = true; break;
+        case WM_KEYUP: keyDown = false; hell_i_PushKeyUpEvent(lastKey); break;
+        case WM_CHAR: 
+        {
+            if (keyDown) // it could be that we only get WM_CHAR after a keydown... which would make this unnecesary
+            {
+                hell_i_PushKeyDownEvent(wParam);
+                lastKey = wParam;
+            }
+            break;
+        }
         default: return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
@@ -94,17 +115,16 @@ inline static void drainMsEventQueue(void)
     MSG Msg;
     while(PeekMessage(&Msg, NULL, 0, 0, PM_NOREMOVE))
     {
-        printf("Got a message!\n");
         if ( !GetMessage (&Msg, NULL, 0, 0) ) 
         {
-            assert(0 && "Quake 3 code exited here.. not sure what this issue is");
+            // X button hit.. i think. we quit.
+            hell_c_AddText("quit\n");
         } 
         // save the msg time, because wndprocs don't have access to the timestamp
         // g_wv.sysMsgTime = msg.time
         TranslateMessage(&Msg);
         DispatchMessage(&Msg);
     }
-
 }
 
 inline static void cleanUpMs(void)
@@ -112,4 +132,5 @@ inline static void cleanUpMs(void)
 
 }
 
+#endif
 #endif

@@ -27,6 +27,7 @@ void              hell_c_AddNText(const char* text, unsigned int len);
 void              hell_c_AddChar(const char c);
 char*             hell_c_Argv(unsigned int i);
 void              hell_c_Execute(void);
+void              hell_c_SetVar(const char* name, const char* value, const Hell_C_VarFlagBits flags);
 const Hell_C_Var* hell_c_GetVar(const char* name, const char* value, const Hell_C_VarFlagBits flags);
 
 #endif /* end of include guard: HYDROGEN_CMD_H */

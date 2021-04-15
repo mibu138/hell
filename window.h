@@ -6,7 +6,7 @@ typedef enum {
     HELL_WINDOW_WIN32_TYPE
 } Hell_WindowType;
 
-typedef struct {
+typedef struct Hell_Window {
     unsigned int    width;
     unsigned int    height;
     Hell_WindowType type;

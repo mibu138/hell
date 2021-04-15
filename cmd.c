@@ -183,6 +183,28 @@ void hell_c_AddCommand(const char* cmdName, Hell_C_CmdFn function)
     *pos = cmd;
 }
 
+const void hell_c_SetVar(const char* name, const char* value, const VarFlags flags)
+{
+    Var* var = findVar(name);
+
+    assert(!var && "Need to handle overwriting the var if it exists.");
+
+    var = hell_m_Alloc(sizeof(Var));
+    var->name = hell_m_CopyString(name);
+    var->string = hell_m_CopyString(value);
+    var->default_string = hell_m_CopyString(value);
+    var->modified = true;
+    var->value = strtof(var->string, NULL);
+
+    Var** pos = &variables;
+    while (*pos && strcmp((*pos)->name, var->name) < 0)
+        pos = &(*pos)->next;
+    var->next = *pos;
+    *pos = var;
+
+    var->flags = flags;
+}
+
 const Var* hell_c_GetVar(const char* name, const char* value, const VarFlags flags)
 {
     Var* var = findVar(name);
