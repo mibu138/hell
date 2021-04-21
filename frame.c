@@ -1,5 +1,6 @@
 #include "common.h"
 #include "cmd.h"
+#include "io.h"
 #include "window.h"
 #include "input.h"
 #include "client.h"
@@ -10,8 +11,8 @@
 
 typedef Hell_C_Var Var;
 
-Hell_FrameFn    userFrame;
-Hell_ShutDownFn userShutDown;
+static Hell_FrameFn    userFrame;
+static Hell_ShutDownFn userShutDown;
 
 static void dummyUserFrame(void)
 {
@@ -27,11 +28,12 @@ void hell_Init(bool initConsole, Hell_FrameFn fn1, Hell_ShutDownFn fn2, const He
     else
         userFrame = dummyUserFrame;
     userShutDown = fn2;
+    hell_io_Init();
     hell_c_Init();
     hell_c_AddCommand("quit", hell_Quit);
     hell_i_Init(initConsole);
-    const Hell_C_Var* varW = hell_c_GetVar("d_width", "600", HELL_C_VAR_ARCHIVE_BIT);
-    const Hell_C_Var* varH = hell_c_GetVar("d_height", "500", HELL_C_VAR_ARCHIVE_BIT);
+    const Hell_C_Var* varW = hell_c_GetVar("d_width", "666", HELL_C_VAR_ARCHIVE_BIT);
+    const Hell_C_Var* varH = hell_c_GetVar("d_height", "666", HELL_C_VAR_ARCHIVE_BIT);
     const Hell_C_Var* dedicated = hell_c_GetVar("dedicated", "0", 0);
     if (window)
         *window = hell_w_Init(varW->value, varH->value, NULL);
@@ -71,6 +73,7 @@ void hell_ShutDown(void)
     hell_w_CleanUp();
     hell_i_CleanUp();
     hell_Announce("Shut Down.\n");
+    hell_io_Shutdown();
 }
 
 void hell_Quit(void)

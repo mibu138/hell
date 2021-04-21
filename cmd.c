@@ -1,5 +1,4 @@
 #include "cmd.h"
-#include "mem.h"
 #include "common.h"
 #include "error.h"
 #include <stdlib.h>
@@ -171,7 +170,7 @@ void hell_c_AddCommand(const char* cmdName, Hell_C_CmdFn function)
 		}
 	}
 
-    cmd = hell_m_Alloc(sizeof(Cmd));
+    cmd = hell_Malloc(sizeof(Cmd));
     strncpy(cmd->name, cmdName, MAX_CMD_NAME_LEN);
     cmd->function = function;
 
@@ -189,10 +188,10 @@ const void hell_c_SetVar(const char* name, const char* value, const VarFlags fla
 
     assert(!var && "Need to handle overwriting the var if it exists.");
 
-    var = hell_m_Alloc(sizeof(Var));
-    var->name = hell_m_CopyString(name);
-    var->string = hell_m_CopyString(value);
-    var->default_string = hell_m_CopyString(value);
+    var = hell_Malloc(sizeof(Var));
+    var->name = hell_CopyString(name);
+    var->string = hell_CopyString(value);
+    var->default_string = hell_CopyString(value);
     var->modified = true;
     var->value = strtof(var->string, NULL);
 
@@ -214,10 +213,10 @@ const Var* hell_c_GetVar(const char* name, const char* value, const VarFlags fla
         return var;
     }
 
-    var = hell_m_Alloc(sizeof(Var));
-    var->name = hell_m_CopyString(name);
-    var->string = hell_m_CopyString(value);
-    var->default_string = hell_m_CopyString(value);
+    var = hell_Malloc(sizeof(Var));
+    var->name = hell_CopyString(name);
+    var->string = hell_CopyString(value);
+    var->default_string = hell_CopyString(value);
     var->modified = true;
     var->value = strtof(var->string, NULL);
 

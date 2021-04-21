@@ -5,7 +5,6 @@
 #include "common.h"
 #include "evcodes.h"
 #include "input.h"
-#include "mem.h"
 #include "platform.h"
 
 #if defined(UNIX)

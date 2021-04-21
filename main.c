@@ -17,7 +17,11 @@ static void chungus(void)
 void hell_Main(void)
 {
     const Hell_Window* window = NULL;
+#if defined(UNIX)
+    hell_Init(true, NULL, NULL, &window);
+#elif defined(WINDOWS)
     hell_Init(false, NULL, NULL, &window);
+#endif
     hell_c_AddCommand("chungus", chungus);
     hell_Loop();
 }

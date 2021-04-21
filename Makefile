@@ -6,7 +6,7 @@ endif
 
 CC        = gcc
 NAME      = hell
-CFLAGS    = -Wall -fPIC
+CFLAGS    = -g -Wall -fPIC
 O         = build
 H         = .
 LIBS      = 
@@ -28,9 +28,9 @@ LIBNAME   = lib$(NAME).$(LIBEXT)
 LIBPATH   = $(LIBDIR)/$(LIBNAME)
 TESTNAME  = $(NAME)test$(XEXT)
 
-HEADERS = $(H)/window.h $(H)/input.h $(H)/cmd.h $(H)/mem.h $(H)/common.h $(H)/ds.h $(H)/client.h $(H)/server.h $(H)/types.h $(OS_HEADERS)
-OBJS    = $(O)/window.o $(O)/input.o $(O)/cmd.o $(O)/mem.o $(O)/common.o $(O)/ds.o $(O)/client.o $(O)/server.o \
-		  $(O)/frame.o
+HEADERS = $(H)/window.h $(H)/input.h $(H)/cmd.h $(H)/common.h $(H)/ds.h $(H)/client.h $(H)/server.h $(H)/debug.h $(H)/io.h $(H)/types.h $(OS_HEADERS)
+OBJS    = $(O)/window.o $(O)/input.o $(O)/cmd.o $(O)/common.o $(O)/ds.o $(O)/client.o $(O)/server.o $(O)/debug.o $(O)/io.o \
+		  $(O)/frame.o $(O)/mem.o
 
 all: lib test 
 

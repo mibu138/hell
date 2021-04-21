@@ -2,7 +2,6 @@
 #include "input.h"
 #include "common.h"
 #include "cmd.h"
-#include "mem.h"
 #include <fcntl.h>
 #include <assert.h>
 #include <unistd.h>
@@ -12,6 +11,7 @@
 #include <time.h>
 #include "private.h"
 #include "platform.h"
+#include "debug.h"
 //
 #ifdef UNIX
 #include <termios.h>
@@ -226,7 +226,7 @@ void hell_i_PumpEvents(void)
         // this should put a trailing null at the end of the data, but not sure if we need this...
         //ev.data.consoleData.ptrLen = strnlen(ci, MAX_EDIT_LINE - 1) + 1; 
         ev.data.consoleData.ptrLen = strnlen(ci, MAX_EDIT_LINE); 
-        ev.data.consoleData.ptr = hell_m_Alloc(ev.data.consoleData.ptrLen);
+        ev.data.consoleData.ptr = hell_Malloc(ev.data.consoleData.ptrLen);
         memcpy(ev.data.consoleData.ptr, ci, ev.data.consoleData.ptrLen); // should copy a null at the end
         ev.time = hell_Time();
         pushEvent(ev);
@@ -245,7 +245,7 @@ void hell_i_DrainEvents(void)
         {
             hell_c_AddNText(event->data.consoleData.ptr, event->data.consoleData.ptrLen);
             hell_c_AddChar('\n');
-            hell_m_Free(event->data.consoleData.ptr);
+            hell_Free(event->data.consoleData.ptr);
             continue;
         }
         for (int i = 0; i < subscriberCount; i++) 
@@ -374,7 +374,7 @@ void hell_i_CleanUp(void)
 void hell_i_Unsubscribe(const Hell_I_SubscriberFn fn)
 {
     assert(subscriberCount > 0);
-    hell_DPrint("HELL: Unsubscribing fn...\n");
+    hell_DPrint("Unsubscribing fn...\n");
     int fnIndex = -1;
     for (int i = 0; i < subscriberCount; i++)
     {
