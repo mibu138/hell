@@ -49,7 +49,6 @@ next:
 #define VALVE_OFF_POSITION 2
 void hell_DebugPrintImpl(const char* fmt, ...)
 {
-
     static int valve = 0;
     if (valve)
     {
