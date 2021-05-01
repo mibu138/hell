@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.17)
 
 project(Hell)
 
-set(CMAKE_MODULE_PATH "/home/michaelb/dev/cmake")
-include(global)
+set(CMAKE_INSTALL_MESSAGE LAZY)
+
+set(LIBRARY_NAME hell)
 
 add_subdirectory(src)
 

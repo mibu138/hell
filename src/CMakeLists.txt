@@ -32,15 +32,24 @@ set(PUBLIC_HEADERS
     win32_window_type.h
     window.h)
 
-add_library(hell SHARED ${SRCS})
-add_executable(demo main.c)
-target_link_libraries(hell xcb dl xcb-keysyms)
-target_link_libraries(demo hell)
-set_target_properties(hell PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
-install(TARGETS hell
-    LIBRARY DESTINATION lib 
-    PUBLIC_HEADER DESTINATION include/hell)
+add_library(${LIBRARY_NAME} SHARED ${SRCS})
 
-install(TARGETS hell 
-    LIBRARY DESTINATION ${HOUDINI_TOOL_INS_DIR}/lib 
-    PUBLIC_HEADER DESTINATION ${HOUDINI_TOOL_INS_DIR}/include/hell)
+target_link_libraries(${LIBRARY_NAME} xcb dl xcb-keysyms)
+set_target_properties(${LIBRARY_NAME} PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}")
+
+if (NOT DEFINED LIB_INSTALL_PREFIX)
+    set(LIB_INSTALL_PREFIX lib)
+endif()
+
+install(TARGETS ${LIBRARY_NAME} 
+    LIBRARY DESTINATION ${LIB_INSTALL_PREFIX})
+
+if (NOT DEFINED LIB_ONLY)
+    add_executable(demo main.c)
+    target_link_libraries(demo ${LIBRARY_NAME})
+endif()
+
+if (NOT DEFINED NO_HEADER_INSTALL)
+    install(TARGETS ${LIBRARY_NAME} 
+        PUBLIC_HEADER DESTINATION ${HEADER_INSTALL_PREFIX}${LIBRARY_NAME})
+endif()
