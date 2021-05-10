@@ -41,7 +41,9 @@ void*    hell_LoadSymbol(void* module, const char* symname);
 bool     hell_FileExists(const char* path);
 
 // uber function that calls the individual initializers in the correct order
-void     hell_Init(bool initConsole, Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, const struct Hell_Window** window);
+void     hell_Init(bool initConsole, Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown);
+
+const struct Hell_Window* hell_OpenWindow(unsigned width, unsigned height, const char* title);
 
 // run run run and never return
 void     hell_Loop(void);

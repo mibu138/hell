@@ -21,7 +21,7 @@ static void dummyUserFrame(void)
     // because we always call something
 }
 
-void hell_Init(bool initConsole, Hell_FrameFn fn1, Hell_ShutDownFn fn2, const Hell_Window** window)
+void hell_Init(bool initConsole, Hell_FrameFn fn1, Hell_ShutDownFn fn2)
 {
     if (fn1)
         userFrame = fn1;
@@ -32,15 +32,16 @@ void hell_Init(bool initConsole, Hell_FrameFn fn1, Hell_ShutDownFn fn2, const He
     hell_c_Init();
     hell_c_AddCommand("quit", hell_Quit);
     hell_i_Init(initConsole);
-    const Hell_C_Var* varW = hell_c_GetVar("d_width", "666", HELL_C_VAR_ARCHIVE_BIT);
-    const Hell_C_Var* varH = hell_c_GetVar("d_height", "666", HELL_C_VAR_ARCHIVE_BIT);
     const Hell_C_Var* dedicated = hell_c_GetVar("dedicated", "0", 0);
-    if (window)
-        *window = hell_w_Init(varW->value, varH->value, NULL);
     sv_Init();
     if (!dedicated->value)
         cl_Init();
     hell_Announce("Initialized.\n");
+}
+
+const Hell_Window* hell_OpenWindow(unsigned w, unsigned h, const char* title)
+{
+    return hell_w_Init(w, h, title);
 }
 
 void hell_Frame(Tick delta)
