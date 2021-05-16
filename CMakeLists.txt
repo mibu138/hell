@@ -1,15 +1,12 @@
 cmake_minimum_required(VERSION 3.17)
 
-project(hell)
+project(Hell VERSION 1.0.0)
 
-if (NOT DEFINED GLOBAL_CMAKE_PATH)
-    include(/home/michaelb/dev/cmake/global.cmake)
-else()
-    include({GLOBAL_CMAKE_PATH})
-endif()
+include(GNUInstallDirs)
 
-set(LIBRARY_NAME ${CMAKE_PROJECT_NAME})
+add_subdirectory(cmake)
+add_subdirectory(src/lib)
+add_subdirectory(src/examples)
 
-add_subdirectory(src)
 
 

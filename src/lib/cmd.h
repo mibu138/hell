@@ -16,7 +16,7 @@ typedef struct Hell_C_Var {
     char*                   default_string;
     uint32_t                flags;
     bool                    modified;
-    float                   value;
+    double                  value;
     struct Hell_C_Var* next;
 } Hell_C_Var;
 

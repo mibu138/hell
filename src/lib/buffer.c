@@ -1,4 +1,4 @@
-#include "ds.h"
+#include "buffer.h"
 #include <memory.h>
 
 void hell_BufferInit(Hell_Buffer* buf, Byte* data, Size length)

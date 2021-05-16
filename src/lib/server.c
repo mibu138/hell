@@ -1,5 +1,5 @@
 #include "common.h"
-#include "ds.h"
+#include "buffer.h"
 
 #define MAX_MSGLEN 1400             /* max length of a message */
 

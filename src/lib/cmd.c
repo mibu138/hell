@@ -182,7 +182,7 @@ void hell_c_AddCommand(const char* cmdName, Hell_C_CmdFn function)
     *pos = cmd;
 }
 
-const void hell_c_SetVar(const char* name, const char* value, const VarFlags flags)
+void hell_c_SetVar(const char* name, const char* value, const Hell_C_VarFlagBits flags)
 {
     Var* var = findVar(name);
 
