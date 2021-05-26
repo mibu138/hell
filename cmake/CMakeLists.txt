@@ -1,1 +1,2 @@
-include(/home/michaelb/dev/cmake/package.cmake)
+include(configure)
+configure(HellConfig.cmake.in)
