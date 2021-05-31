@@ -11,6 +11,7 @@
 #include <xcb/xcb.h>
 #include "evcodes.h"
 #include "input.h"
+#include "private.h"
 #include "window.h"
 #include "common.h"
 #include <assert.h>
@@ -23,16 +24,18 @@
 
 #define MAX_WIN_NAME 32
 
-static XcbWindow xcbWindow;
-static char windowName[MAX_WIN_NAME] = "floating";
+typedef struct Hell_XcbWindow {
+    xcb_connection_t*  connection;
+    xcb_key_symbols_t* keysymbols;
+    xcb_window_t       window;
+    char               name[MAX_WIN_NAME];
+} Hell_XcbWindow;
 
-static xcb_key_symbols_t* pXcbKeySymbols;
-
-inline static uint32_t getXcbKeyCode(const xcb_key_press_event_t* event)
+inline static uint32_t getXcbKeyCode(xcb_key_symbols_t* keysymbols, const xcb_key_press_event_t* event)
 {
     // XCB documentation is fucking horrible. fucking last parameter is called col. wtf? 
     // no clue what that means. ZERO documentation on this function. trash.
-    xcb_keysym_t keySym = xcb_key_symbols_get_keysym(pXcbKeySymbols, event->detail, 0); 
+    xcb_keysym_t keySym = xcb_key_symbols_get_keysym(keysymbols, event->detail, 0); 
     uint32_t keyCode = 0;
     switch (keySym)
     {
@@ -79,10 +82,10 @@ inline static uint32_t getXcbKeyCode(const xcb_key_press_event_t* event)
     return keyCode;
 }
 
-inline static Hell_I_MouseData getXcbMouseData(const xcb_generic_event_t* event)
+inline static Hell_MouseEventData getXcbMouseData(const xcb_generic_event_t* event)
 {
     xcb_motion_notify_event_t* motion = (xcb_motion_notify_event_t*)event;
-    Hell_I_MouseData mouseData;
+    Hell_MouseEventData mouseData;
     mouseData.x = motion->event_x;
     mouseData.y = motion->event_y;
     if (motion->detail == 1) mouseData.buttonCode = HELL_MOUSE_LEFT; 
@@ -91,38 +94,45 @@ inline static Hell_I_MouseData getXcbMouseData(const xcb_generic_event_t* event)
     return mouseData;
 }
 
-inline static Hell_I_ResizeData getXcbResizeData(const xcb_generic_event_t* event)
+inline static Hell_ResizeEventData getXcbResizeData(const xcb_generic_event_t* event)
 {
     xcb_resize_request_event_t* resize = (xcb_resize_request_event_t*)event;
-    Hell_I_ResizeData data = {0};
+    Hell_ResizeEventData data = {0};
     data.height = resize->height;
     data.width  = resize->width;
     return data;
 }
 
-inline static Hell_I_ResizeData getXcbConfigureData(const xcb_generic_event_t* event)
+inline static Hell_ResizeEventData getXcbConfigureData(const xcb_generic_event_t* event)
 {
     xcb_configure_notify_event_t* resize = (xcb_configure_notify_event_t*)event;
-    Hell_I_ResizeData data = {0};
+    Hell_ResizeEventData data = {0};
     data.height = resize->height;
     data.width  = resize->width;
     return data;
 }
 
-inline static void initXcbWindow(const uint16_t width, const uint16_t height, const char* name, Hell_Window* window)
+inline static void createXcbWindow(const uint16_t width, const uint16_t height, const char* name, Hell_Window* window)
 {
+    window->typeSpecificData = hell_Malloc(sizeof(Hell_XcbWindow));
+    Hell_XcbWindow* xcbWindow = (Hell_XcbWindow*)window->typeSpecificData;
+    memset(xcbWindow, 0, sizeof(Hell_XcbWindow));
     if (name)
     {
         assert(strnlen(name, MAX_WIN_NAME) < MAX_WIN_NAME);
-        strncpy(windowName, name, MAX_WIN_NAME);
+        strncpy(xcbWindow->name, name, MAX_WIN_NAME);
+    }
+    else 
+    {
+        strcpy(xcbWindow->name, "floating");
     }
     window->width  = width;
     window->height = height;
     int screenNum = 0;
-    xcbWindow.connection =     xcb_connect(NULL, &screenNum);
-    xcbWindow.window     =     xcb_generate_id(xcbWindow.connection);
+    xcbWindow->connection =     xcb_connect(NULL, &screenNum);
+    xcbWindow->window     =     xcb_generate_id(xcbWindow->connection);
 
-    const xcb_setup_t* setup   = xcb_get_setup(xcbWindow.connection);
+    const xcb_setup_t* setup   = xcb_get_setup(xcbWindow->connection);
     xcb_screen_iterator_t iter = xcb_setup_roots_iterator(setup);
 
     for (int i = 0; i < screenNum; i++)
@@ -148,9 +158,9 @@ inline static void initXcbWindow(const uint16_t width, const uint16_t height, co
 		XCB_EVENT_MASK_BUTTON_PRESS |
 		XCB_EVENT_MASK_BUTTON_RELEASE;
 
-    xcb_create_window(xcbWindow.connection, 
+    xcb_create_window(xcbWindow->connection, 
             XCB_COPY_FROM_PARENT,              // depth 
-            xcbWindow.window,                  // window id
+            xcbWindow->window,                  // window id
             screen->root,                      // parent
             0, 0,                              // x and y coordinate of new window
             width, height, 
@@ -159,36 +169,37 @@ inline static void initXcbWindow(const uint16_t width, const uint16_t height, co
             XCB_COPY_FROM_PARENT,              // visual 
             mask, values);                          // masks (TODO: set to get inputs)
 
-    xcb_change_property(xcbWindow.connection, 
+    xcb_change_property(xcbWindow->connection, 
             XCB_PROP_MODE_REPLACE, 
-            xcbWindow.window, 
+            xcbWindow->window, 
             XCB_ATOM_WM_NAME, 
-            XCB_ATOM_STRING, 8, strlen(windowName), windowName);
+            XCB_ATOM_STRING, 8, strlen(xcbWindow->name), xcbWindow->name);
 
-    xcb_map_window(xcbWindow.connection, xcbWindow.window);
-    xcb_flush(xcbWindow.connection);
-    pXcbKeySymbols = xcb_key_symbols_alloc(xcbWindow.connection);
-    hell_Announce("Xcb Display initialized.\n");
+    xcb_map_window(xcbWindow->connection, xcbWindow->window);
+    xcb_flush(xcbWindow->connection);
+    xcbWindow->keysymbols = xcb_key_symbols_alloc(xcbWindow->connection);
 
     window->width            = width;
     window->height           = height;
     window->type             = HELL_WINDOW_XCB_TYPE;
-    window->typeSpecificData = &xcbWindow;
 }
 
-inline static void drainXcbEventQueue(Hell_Window* window)
+inline static void drainXcbEventQueue(Hell_EventQueue* queue, Hell_Window* window)
 {
+    assert(queue);
+    assert(window);
+    Hell_XcbWindow* xcbWindow = (Hell_XcbWindow*)window->typeSpecificData;
     xcb_generic_event_t* xEvent = NULL;
-    while ((xEvent = xcb_poll_for_event(xcbWindow.connection)))
+    while ((xEvent = xcb_poll_for_event(xcbWindow->connection)))
     {
 start:
         switch (XCB_EVENT_RESPONSE_TYPE(xEvent))
         {
             case XCB_KEY_PRESS: 
             {
-                uint32_t keyCode = getXcbKeyCode((xcb_key_press_event_t*)xEvent);
+                uint32_t keyCode = getXcbKeyCode(xcbWindow->keysymbols, (xcb_key_press_event_t*)xEvent);
                 if (keyCode != 0)
-                    hell_i_PushKeyDownEvent(keyCode);
+                    hell_PushKeyDownEvent(queue, keyCode);
                 break;
             }
             case XCB_KEY_RELEASE: 
@@ -199,18 +210,18 @@ start:
                 // its unclear to me whether very rapidly hitting a key could
                 // result in the same thing, and wheter it is worthwhile 
                 // accounting for that
-                uint32_t keyCode = getXcbKeyCode((xcb_key_press_event_t*)xEvent);
+                uint32_t keyCode = getXcbKeyCode(xcbWindow->keysymbols, (xcb_key_press_event_t*)xEvent);
                 if (keyCode == 0) break;
                 // need to see if this is actually an auto repeat
-                xcb_generic_event_t* next = xcb_poll_for_event(xcbWindow.connection);
+                xcb_generic_event_t* next = xcb_poll_for_event(xcbWindow->connection);
                 if (next) 
                 {
                     uint8_t type = XCB_EVENT_RESPONSE_TYPE(next);
-                    uint32_t keyCodeNext = getXcbKeyCode((xcb_key_press_event_t*)next);
+                    uint32_t keyCodeNext = getXcbKeyCode(xcbWindow->keysymbols, (xcb_key_press_event_t*)next);
                     // if next is not a press or the key code is different then neither are autorepeats
                     if (type != XCB_KEY_PRESS || keyCode != keyCodeNext)
                     {
-                        hell_i_PushKeyUpEvent(keyCode);
+                        hell_PushKeyUpEvent(queue, keyCode);
                         free(xEvent);
                         xEvent = next;
                         goto start;
@@ -219,47 +230,47 @@ start:
                         free(next);
                     break;
                 }
-                hell_i_PushKeyUpEvent(keyCode);
+                hell_PushKeyUpEvent(queue, keyCode);
                 break;
             }
             case XCB_BUTTON_PRESS:
             {
-                Hell_I_MouseData data = getXcbMouseData(xEvent);
-                hell_i_PushMouseDownEvent(data.x, data.y, data.buttonCode);
+                Hell_MouseEventData data = getXcbMouseData(xEvent);
+                hell_PushMouseDownEvent(queue, data.x, data.y, data.buttonCode);
                 break;
             }
             case XCB_BUTTON_RELEASE:
             {
-                Hell_I_MouseData data = getXcbMouseData(xEvent);
-                hell_i_PushMouseUpEvent(data.x, data.y, data.buttonCode);
+                Hell_MouseEventData data = getXcbMouseData(xEvent);
+                hell_PushMouseUpEvent(queue, data.x, data.y, data.buttonCode);
                 break;
             }
             case XCB_MOTION_NOTIFY:
             {
-                Hell_I_MouseData data = getXcbMouseData(xEvent);
-                hell_i_PushMouseMotionEvent(data.x, data.y, data.buttonCode);
+                Hell_MouseEventData data = getXcbMouseData(xEvent);
+                hell_PushMouseMotionEvent(queue, data.x, data.y, data.buttonCode);
                 break;
             }
             case XCB_RESIZE_REQUEST:
             {
-                Hell_I_ResizeData data = getXcbResizeData(xEvent);
+                Hell_ResizeEventData data = getXcbResizeData(xEvent);
                 if (data.width == window->width && data.height == window->height)
                     break;
                 window->width = data.width;
                 window->height = data.height;
-                hell_i_PushWindowResizeEvent(data.width, data.height);
+                hell_PushWindowResizeEvent(queue, data.width, data.height);
                 break;
             }
             // for some reason resize events seem to come through here.... but so do window moves...
             // TODO: throw out window moves.
             case XCB_CONFIGURE_NOTIFY: 
             {
-                Hell_I_ResizeData data = getXcbConfigureData(xEvent);
+                Hell_ResizeEventData data = getXcbConfigureData(xEvent);
                 if (data.width == window->width && data.height == window->height)
                     break;
                 window->width = data.width;
                 window->height = data.height;
-                hell_i_PushWindowResizeEvent(data.width, data.height);
+                hell_PushWindowResizeEvent(queue, data.width, data.height);
                 break;
             }
             default: break;
@@ -268,12 +279,16 @@ start:
     }
 }
 
-inline static void cleanUpXcb(void)
+inline static void destroyXcbWindow(Hell_Window* window)
 {
-    xcb_key_symbols_free(pXcbKeySymbols);
-    xcb_flush(xcbWindow.connection);
-    xcb_destroy_window(xcbWindow.connection, xcbWindow.window);
-    xcb_disconnect(xcbWindow.connection);
+    assert(window->type == HELL_WINDOW_XCB_TYPE);
+    Hell_XcbWindow* xcbWindow = (Hell_XcbWindow*)window->typeSpecificData;
+    xcb_key_symbols_free(xcbWindow->keysymbols);
+    xcb_flush(xcbWindow->connection);
+    xcb_destroy_window(xcbWindow->connection, xcbWindow->window);
+    xcb_disconnect(xcbWindow->connection);
+    hell_Free(xcbWindow);
+    memset(xcbWindow, 0, sizeof(Hell_XcbWindow));
 }
 
 #endif

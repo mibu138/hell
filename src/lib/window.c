@@ -6,6 +6,7 @@
 #include "evcodes.h"
 #include "input.h"
 #include "platform.h"
+#include "private.h"
 
 #if defined(UNIX)
 #include "unix_window.h"
@@ -15,37 +16,34 @@
 HellWinVars winVars;
 #endif
 
-static Hell_Window window;
-
-const Hell_Window* hell_w_Init(const uint16_t width, const uint16_t height, const char* name)
+const Hell_Window* hell_CreateWindow(const uint16_t width, const uint16_t height, const char* name, Hell_Window* window)
 {
     // once we support other platforms we can put a switch in here
+    memset(window, 0, sizeof(Hell_Window));
     #if defined(UNIX)
-    initXcbWindow(width, height, name, &window);
+    createXcbWindow(width, height, name, window);
     #elif defined(WINDOWS)
-    initMsWindow(width, height, name, &window);
+    initMsWindow(width, height, name, window);
     #endif
-    return &window;
+    return window;
 }
 
-void hell_w_DrainWindowEvents(void)
+void hell_DrainWindowEvents(Hell_EventQueue* queue, Hell_Window* window)
 {
-    if (window.typeSpecificData) // used to it is active
-    {
     #if defined(UNIX)
-        drainXcbEventQueue(&window);
+    drainXcbEventQueue(queue, window);
     #elif defined(WINDOWS)
-        drainMsEventQueue();
+    drainMsEventQueue();
     #endif
-    }
 }
 
-void hell_w_CleanUp(void)
+void hell_DestroyWindow(Hell_Window* window)
 {
     #if defined(UNIX)
-    cleanUpXcb();
+    destroyXcbWindow(window);
     #elif defined(WINDOWS)
-    cleanUpMs();
+    destroyMsWindow();
     #endif
+    memset(window, 0, sizeof(Hell_Window));
     hell_Announce("Display shutdown.\n");
 }

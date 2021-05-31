@@ -8,68 +8,93 @@ typedef struct {
     int16_t  x;
     int16_t  y;
     uint8_t  buttonCode;
-} Hell_I_MouseData;
+} Hell_MouseEventData;
 
 typedef struct {
     uint16_t width;
     uint16_t height;
-} Hell_I_ResizeData;
+} Hell_ResizeEventData;
 
 typedef struct {
     void*            ptr;
     uint32_t         ptrLen;
-} HELL_I_ConsoleData;
+} Hell_ConsoleEventData;
 
 typedef union {
-    Hell_I_MouseData   mouseData;
-    Hell_I_ResizeData  resizeData;
-    HELL_I_ConsoleData consoleData;
-    uint32_t           keyCode;
-} Hell_I_EventData;
+    Hell_MouseEventData   mouseData;
+    Hell_ResizeEventData  resizeData;
+    Hell_ConsoleEventData consoleData;
+    uint32_t              keyCode;
+} Hell_EventData;
 
 typedef enum {
-    HELL_I_NONE,
-    HELL_I_KEYDOWN,
-    HELL_I_KEYUP,
-    HELL_I_MOUSEDOWN,
-    HELL_I_MOUSEUP,
-    HELL_I_MOTION,
-    HELL_I_RESIZE,
-    HELL_I_CONSOLE
-} Hell_I_EventType;
+    HELL_EVENT_TYPE_NONE,
+    HELL_EVENT_TYPE_KEYDOWN,
+    HELL_EVENT_TYPE_KEYUP,
+    HELL_EVENT_TYPE_MOUSEDOWN,
+    HELL_EVENT_TYPE_MOUSEUP,
+    HELL_EVENT_TYPE_MOTION,
+    HELL_EVENT_TYPE_RESIZE,
+    HELL_EVENT_TYPE_CONSOLE
+} Hell_EventType;
 
 typedef enum {
-    HELL_I_NONE_BIT   = 1 << 0,
-    HELL_I_KEY_BIT    = 1 << 1,
-    HELL_I_MOUSE_BIT  = 1 << 2,
-    HELL_I_WINDOW_BIT = 1 << 3,
-    HELL_I_ALL_BIT    = ~(uint32_t)1
-} Hell_I_EventMaskBits;
+    HELL_EVENT_MASK_NONE_BIT    = 1 << 0,
+    HELL_EVENT_MASK_KEY_BIT     = 1 << 1,
+    HELL_EVENT_MASK_MOUSE_BIT   = 1 << 2,
+    HELL_EVENT_MASK_WINDOW_BIT  = 1 << 3,
+    HELL_EVENT_MASK_CONSOLE_BIT = 1 << 4,
+    HELL_EVENT_MASK_ALL_BIT     = ~(uint32_t)1
+} Hell_EventMaskBits;
 
-typedef uint32_t Hell_I_EventMask;
+typedef uint32_t Hell_EventMask;
 
-typedef struct Hell_I_Event {
-    Hell_I_EventData data;
-    Hell_I_EventType type;
-    Hell_I_EventMask mask;
-    uint64_t         time;
-} Hell_I_Event;
+typedef struct Hell_Event {
+    Hell_EventData data;
+    Hell_EventType type;
+    Hell_EventMask mask;
+    uint64_t       time;
+} Hell_Event;
 
-typedef bool (*Hell_I_SubscriberFn)(const Hell_I_Event*);
+typedef struct Hell_EventQueue Hell_EventQueue;
+typedef struct Hell_Console    Hell_Console;
+typedef struct Hell_Window     Hell_Window;
 
-void hell_i_Init(bool initConsole);
-void hell_i_PumpEvents(void);
-void hell_i_DrainEvents(void);
-void hell_i_Subscribe(Hell_I_SubscriberFn func, Hell_I_EventMask mask);
-void hell_i_Unsubscribe(const Hell_I_SubscriberFn fn);
-void hell_i_CleanUp(void);
+// returning true consumes event
+typedef bool (*Hell_SubscriberFn)(const Hell_Event*, void* data);
 
-void hell_i_PushWindowResizeEvent(unsigned int width, unsigned int height);
-void hell_i_PushMouseDownEvent(int16_t x, int16_t y, uint8_t buttonCode);
-void hell_i_PushMouseUpEvent(int16_t x, int16_t y, uint8_t buttonCode);
-void hell_i_PushMouseMotionEvent(int16_t x, int16_t y, uint8_t buttonCode);
-void hell_i_PushKeyDownEvent(uint32_t keyCode);
-void hell_i_PushKeyUpEvent(uint32_t keyCode);
-void hell_i_PushEmptyEvent(void);
+// starts the clock for all hell instances.
+// safe to call even if clock is already started.
+void hell_StartClock(void);
+bool hell_ClockStarted(void);
+
+// generates events from input sources and moves them into the event queue.
+// neither window nor console are required. if they are null it just does not
+// try to generate events from them.
+void hell_CoagulateInput(Hell_EventQueue* queue, Hell_Console* console, uint32_t windowCount, Hell_Window* windows[windowCount]);
+
+// drains the event queue and calls subscriber functions
+void hell_SolveInput(Hell_EventQueue* queue);
+
+void hell_Subscribe(Hell_EventQueue*, Hell_EventMask, Hell_SubscriberFn, void* data);
+void hell_Unsubscribe(Hell_EventQueue*, const Hell_SubscriberFn);
+
+void hell_CreateConsole(Hell_Console*);
+void hell_CreateEventQueue(Hell_EventQueue*);
+void hell_DestroyConsole(Hell_Console*);
+void hell_DestroyEventQueue(Hell_EventQueue*);
+
+void hell_PushWindowResizeEvent(Hell_EventQueue*, uint32_t width,
+                                uint32_t height);
+void hell_PushMouseDownEvent(Hell_EventQueue*, int16_t x, int16_t y,
+                             uint8_t buttonCode);
+void hell_PushMouseUpEvent(Hell_EventQueue*, int16_t x, int16_t y,
+                           uint8_t buttonCode);
+void hell_PushMouseMotionEvent(Hell_EventQueue*, int16_t x, int16_t y,
+                               uint8_t buttonCode);
+void hell_PushKeyDownEvent(Hell_EventQueue*, uint32_t keyCode);
+void hell_PushKeyUpEvent(Hell_EventQueue*, uint32_t keyCode);
+void hell_PushEmptyEvent(Hell_EventQueue*);
+
 
 #endif /* end of include guard: HELL_INPUT_H */

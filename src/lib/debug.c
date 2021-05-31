@@ -67,9 +67,9 @@ void hell_DebugPrintImpl(const char* fmt, ...)
     va_start(args, fmt);
     vsnprintf(debugMsg, MAX_DEBUG_MSG_LEN, fmt, args);
     va_end(args);
-    const Hell_C_Var* silent = hell_c_GetVar("debug_silent", "0", HELL_C_VAR_ARCHIVE_BIT);
-    if (!silent->value)
+    //const Hell_C_Var* silent = hell_GetVar("debug_silent", "0", HELL_C_VAR_ARCHIVE_BIT);
+    if (true)
         fputs(debugMsg, stderr);
-    hell_io_WriteToLog(debugMsg);
+    hell_WriteToLog(debugMsg);
 }
 

@@ -5,9 +5,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include "input.h"
 #include "private.h"
 
-typedef void (*CommandFn)(void);
+typedef Hell_CmdFn CommandFn;
 
 #define MAX_CMD_NAME_LEN 32
 
@@ -16,13 +17,11 @@ typedef uint32_t VarFlags;
 typedef struct Cmd {
     struct Cmd* next;
     char        name[MAX_CMD_NAME_LEN];
+    void*       data;
     CommandFn   function;
 } Cmd;
 
 typedef Hell_C_Var Var;
-
-static Cmd*  commands;
-static Var* variables;
 
 #define	MAX_CMD_BUFFER	16384
 #define	MAX_CMD_LINE	1024
@@ -30,48 +29,59 @@ static Var* variables;
 #define	MAX_TOKENS     4	// max tokens resulting from Cmd_TokenizeString
 #define	MAX_TOKEN_SIZE 64
 
-static char cmdTextBuf[MAX_CMD_BUFFER];
-static int  cmdTextCursor;
+typedef struct Hell_Grimoire {
+    Cmd* commands;
+    Var* variables;
 
-static int   cmdArgc;
-static char* cmdArgv[MAX_TOKENS];
-static char  cmdTokenized[MAX_TOKEN_SIZE * MAX_TOKENS];
+    char cmdTextBuf[MAX_CMD_BUFFER];
+    int  cmdTextCursor;
 
-static void cmdListFn(void)
+    int   cmdArgc;
+    char* cmdArgv[MAX_TOKENS];
+    char  cmdTokenized[MAX_TOKEN_SIZE * MAX_TOKENS];
+} Hell_Grimoire;
+
+// so we can rename the struct without having to change the signatures
+typedef Hell_Grimoire Grim;
+
+static void cmdListFn(void* data)
 {
     // could filter based on 2nd argument at some point
     // char* match = NULL;
     // if (cmdArgc > 1)
     //     match = cmdArgv[1];
 
-    for (Cmd* cmd = commands; cmd; cmd = cmd->next)
+    Hell_Grimoire* grim = (Hell_Grimoire*)data;
+    for (Cmd* cmd = grim->commands; cmd; cmd = cmd->next)
         hell_Print("%s\n", cmd->name);
 }
 
-static void cmdEchoFn(void)
+static void cmdEchoFn(void* data)
 {
-	for (int i=1 ; i<cmdArgc ; i++)
-		hell_Print("%s ", cmdArgv[i]);
+    Hell_Grimoire* grim = (Hell_Grimoire*)data;
+	for (int i=1 ; i<grim->cmdArgc ; i++)
+		hell_Print("%s ", grim->cmdArgv[i]);
 	hell_Print("\n");
 }
 
-static void varListFn(void)
+static void varListFn(void* data)
 {
-    for (Var* var = variables; var; var = var->next)
+    Hell_Grimoire* grim = (Hell_Grimoire*)data;
+    for (Var* var = grim->variables; var; var = var->next)
     {
         hell_Print("%s: %f\n", var->name, var->value);
     }
 }
 
-static void varSetFn(void)
+static void varSetFn(void* data)
 {
 }
 
-static void tokenizeString(const char* text)
+static void tokenizeString(Grim* grim, const char* text)
 {
     assert(text);
-    cmdArgc = 0;
-    char* textOut = cmdTokenized;
+    grim->cmdArgc = 0;
+    char* textOut = grim->cmdTokenized;
     while ( 1 ) // text will be NUL terminated
     {
         while (*text && *text <= ' ') // skip whitespace
@@ -79,8 +89,8 @@ static void tokenizeString(const char* text)
         if (!*text) // all tokens parsed
             return;
 
-        cmdArgv[cmdArgc++] = textOut;
-        if (cmdArgc > MAX_TOKENS)
+        grim->cmdArgv[grim->cmdArgc++] = textOut;
+        if (grim->cmdArgc > MAX_TOKENS)
         {
             hell_Print("Too many tokens.\n");
             return;
@@ -90,59 +100,59 @@ static void tokenizeString(const char* text)
             *textOut++ = *text++;
 
         *textOut++ = 0; // end on 0
-        assert(textOut - cmdTokenized < MAX_TOKEN_SIZE * MAX_TOKENS);
+        assert(textOut - grim->cmdTokenized < MAX_TOKEN_SIZE * MAX_TOKENS);
         if (!*text)
             return;
     }
 }
 
-static void execute(const char* line)
+static void execute(Grim* grim, const char* line)
 {
     Cmd *cmd, **prev;
-    tokenizeString(line);
-    if (!cmdArgc)
+    tokenizeString(grim, line);
+    if (!grim->cmdArgc)
     {
         return;
     }
 
-	for ( prev = &commands; *prev ; prev = &cmd->next ) 
+	for ( prev = &grim->commands; *prev ; prev = &cmd->next ) 
     {
 		cmd = *prev;
-		if ( strncmp(cmdArgv[0],cmd->name, MAX_CMD_NAME_LEN) == 0 ) 
+		if ( strncmp(grim->cmdArgv[0],cmd->name, MAX_CMD_NAME_LEN) == 0 ) 
         {
 			// rearrange the links so that the command will be
 			// near the head of the list next time it is used
 			*prev = cmd->next;
-			cmd->next = commands;
-			commands = cmd;
+			cmd->next = grim->commands;
+			grim->commands = cmd;
 
 			// perform the action
 			if ( !cmd->function ) {
 				// let the cgame or game handle it
 				break;
 			} else {
-				cmd->function();
+				cmd->function(cmd->data);
 			}
 			return;
 		}
 	}
 }
 
-static void cmdInit(void)
+static void cmdInit(Grim* grim)
 {
-	hell_c_AddCommand("cmdlist", cmdListFn);
-	hell_c_AddCommand("echo",    cmdEchoFn);
+	hell_AddCommand(grim, "cmdlist", cmdListFn, grim);
+	hell_AddCommand(grim, "echo",    cmdEchoFn, grim);
 }
 
-static void varInit(void)
+static void varInit(Grim* grim)
 {
-    hell_c_AddCommand("varlist", varListFn);
-	hell_c_AddCommand("set", varSetFn);
+    hell_AddCommand(grim, "varlist", varListFn, grim);
+	hell_AddCommand(grim, "set", varSetFn, grim);
 }
 
-static Var* findVar(const char* name)
+static Var* findVar(Grim* grim, const char* name)
 {
-    for (Var* var = variables; var; var = var->next)
+    for (Var* var = grim->variables; var; var = var->next)
     {
         if (strcmp(name, var->name) == 0)
             return var;
@@ -150,18 +160,28 @@ static Var* findVar(const char* name)
     return NULL;
 }
 
-char* hell_c_Argv(unsigned int i)
+
+static bool consoleEventHandler(const Hell_Event* event, void* pGrimoire)
 {
-    if (i >= cmdArgc)
-        return "";
-    return cmdArgv[i];
+    Hell_Grimoire* grim = (Hell_Grimoire*)pGrimoire;
+    hell_AddNText(grim, event->data.consoleData.ptr,
+                    event->data.consoleData.ptrLen);
+    hell_AddChar(grim, '\n');
+    return true;
 }
 
-void hell_c_AddCommand(const char* cmdName, Hell_C_CmdFn function)
+char* hell_Argv(Grim* grim, unsigned int i)
+{
+    if (i >= grim->cmdArgc)
+        return "";
+    return grim->cmdArgv[i];
+}
+
+void hell_AddCommand(Hell_Grimoire* grim, const char* cmdName, Hell_CmdFn function, void* data)
 {
     assert(strnlen(cmdName, MAX_CMD_NAME_LEN) < MAX_CMD_NAME_LEN);
     Cmd* cmd;
-	for (cmd = commands; cmd; cmd = cmd->next)
+	for (cmd = grim->commands; cmd; cmd = cmd->next)
 	{
 		if (!strncmp(cmdName, cmd->name, MAX_CMD_NAME_LEN))
 		{
@@ -173,18 +193,19 @@ void hell_c_AddCommand(const char* cmdName, Hell_C_CmdFn function)
     cmd = hell_Malloc(sizeof(Cmd));
     strncpy(cmd->name, cmdName, MAX_CMD_NAME_LEN);
     cmd->function = function;
+    cmd->data     = data;
 
-	/* link the command in by name order */
-    Cmd** pos = &commands;
+    /* link the command in by name order */
+    Cmd** pos = &grim->commands;
     while (*pos && strcmp((*pos)->name, cmdName) < 0)
         pos = &(*pos)->next;
     cmd->next = *pos;
     *pos = cmd;
 }
 
-void hell_c_SetVar(const char* name, const char* value, const Hell_C_VarFlagBits flags)
+void hell_SetVar(Hell_Grimoire* grim, const char* name, const char* value, const Hell_C_VarFlagBits flags)
 {
-    Var* var = findVar(name);
+    Var* var = findVar(grim, name);
 
     assert(!var && "Need to handle overwriting the var if it exists.");
 
@@ -195,7 +216,7 @@ void hell_c_SetVar(const char* name, const char* value, const Hell_C_VarFlagBits
     var->modified = true;
     var->value = strtof(var->string, NULL);
 
-    Var** pos = &variables;
+    Var** pos = &grim->variables;
     while (*pos && strcmp((*pos)->name, var->name) < 0)
         pos = &(*pos)->next;
     var->next = *pos;
@@ -204,9 +225,9 @@ void hell_c_SetVar(const char* name, const char* value, const Hell_C_VarFlagBits
     var->flags = flags;
 }
 
-const Var* hell_c_GetVar(const char* name, const char* value, const VarFlags flags)
+const Var* hell_GetVar(Grim* grim, const char* name, const char* value, const VarFlags flags)
 {
-    Var* var = findVar(name);
+    Var* var = findVar(grim, name);
     if (var)
     {
         var->flags |= flags;
@@ -220,7 +241,7 @@ const Var* hell_c_GetVar(const char* name, const char* value, const VarFlags fla
     var->modified = true;
     var->value = strtof(var->string, NULL);
 
-    Var** pos = &variables;
+    Var** pos = &grim->variables;
     while (*pos && strcmp((*pos)->name, var->name) < 0)
         pos = &(*pos)->next;
     var->next = *pos;
@@ -230,65 +251,77 @@ const Var* hell_c_GetVar(const char* name, const char* value, const VarFlags fla
     return var;
 }
 
-void hell_c_AddText(const char* text)
+void hell_AddText(Grim* grim, const char* text)
 {
     int l = strnlen(text, MAX_EDIT_LINE);
 
-    if (cmdTextCursor + l >= MAX_CMD_BUFFER)
+    if (grim->cmdTextCursor + l >= MAX_CMD_BUFFER)
     {
         hell_Error(0, "Cmd text buffer overflow");
     }
-    memcpy(cmdTextBuf + cmdTextCursor, text, l);
-    cmdTextCursor += l;
+    memcpy(grim->cmdTextBuf + grim->cmdTextCursor, text, l);
+    grim->cmdTextCursor += l;
 }
 
-void hell_c_AddNText(const char* text, unsigned int l)
+void hell_AddNText(Grim* grim, const char* text, unsigned int l)
 {
-    if (cmdTextCursor + l >= MAX_CMD_BUFFER)
+    if (grim->cmdTextCursor + l >= MAX_CMD_BUFFER)
     {
         hell_Error(0, "Cmd text buffer overflow");
     }
-    memcpy(cmdTextBuf + cmdTextCursor, text, l);
-    cmdTextCursor += l;
+    memcpy(grim->cmdTextBuf + grim->cmdTextCursor, text, l);
+    grim->cmdTextCursor += l;
 }
 
-void hell_c_AddChar(const char c)
+void hell_AddChar(Grim* grim, const char c)
 {
-    if (cmdTextCursor + 1 >= MAX_CMD_BUFFER)
+    if (grim->cmdTextCursor + 1 >= MAX_CMD_BUFFER)
         hell_Error(0, "%s cmd text buffer overflow", __FUNCTION__);
-    cmdTextBuf[cmdTextCursor++] = c;
+    grim->cmdTextBuf[grim->cmdTextCursor++] = c;
 }
 
-void hell_c_Init(void)
+void hell_CreateGrimoire(Hell_EventQueue* queue, Grim* grim)
 {
-    cmdInit();
-    varInit();
+    memset(grim, 0, sizeof(Hell_Grimoire));
+    cmdInit(grim);
+    varInit(grim);
+    hell_Subscribe(queue, HELL_EVENT_MASK_CONSOLE_BIT, consoleEventHandler, grim);
 }
 
-void hell_c_Execute(void)
+void hell_Incantate(Grim* grim)
 {
     int i = 0;
-    while (cmdTextCursor)
+    while (grim->cmdTextCursor)
     {
         char line[MAX_CMD_LINE];
-        for (i = 0; i < cmdTextCursor; i++)
+        for (i = 0; i < grim->cmdTextCursor; i++)
         {
-            if (cmdTextBuf[i] == '\n')
+            if (grim->cmdTextBuf[i] == '\n')
                 break;
         }
         assert(i < MAX_CMD_LINE);
-        memcpy(line, cmdTextBuf, i);
+        memcpy(line, grim->cmdTextBuf, i);
         line[i] = 0;
 
-        if (i == cmdTextCursor)
-            cmdTextCursor = 0;
+        if (i == grim->cmdTextCursor)
+            grim->cmdTextCursor = 0;
         else 
         {
             i++;
-            cmdTextCursor -= i;
-            memmove(cmdTextBuf, cmdTextBuf + i, cmdTextCursor);
+            grim->cmdTextCursor -= i;
+            memmove(grim->cmdTextBuf, grim->cmdTextBuf + i, grim->cmdTextCursor);
         }
 
-        execute(line);
+        execute(grim, line);
     }
+}
+
+void hell_DestroyGrimoire(Grim* grim)
+{
+    memset(grim, 0, sizeof(Hell_Grimoire));
+}
+
+uint64_t hell_SizeOfGrimoire(void)
+{
+    return sizeof(Hell_Grimoire);
 }

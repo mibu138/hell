@@ -3,3 +3,4 @@ build/*
 helltest
 .clangd
 helltest.exe
+compile_commands.json

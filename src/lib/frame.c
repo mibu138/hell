@@ -5,14 +5,14 @@
 #include "input.h"
 #include "client.h"
 #include "server.h"
+#include "private.h"
 #include "stdlib.h"
+#include <assert.h>
+#include <string.h>
 #define HELL_SIMPLE_TYPE_NAMES
 #include "types.h"
 
 typedef Hell_C_Var Var;
-
-static Hell_FrameFn    userFrame;
-static Hell_ShutDownFn userShutDown;
 
 static void dummyUserFrame(void)
 {
@@ -21,39 +21,52 @@ static void dummyUserFrame(void)
     // because we always call something
 }
 
-void hell_Init(bool initConsole, Hell_FrameFn fn1, Hell_ShutDownFn fn2)
+typedef struct Hell_Hellmouth {
+    Hell_Grimoire*   grimoire;
+    Hell_EventQueue* eventqueue;
+    Hell_Console*    console;
+    Hell_Window**    windows;
+    uint32_t         windowCount;
+    Hell_FrameFn     userFrame;
+    Hell_ShutDownFn  userShutDown;
+} Hell_Hellmouth;
+
+void
+hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Console* console,
+                     uint32_t windowCount, Hell_Window* windows[windowCount],
+                     Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown,
+                     Hell_Hellmouth* hellmouth)
 {
-    if (fn1)
-        userFrame = fn1;
-    else
-        userFrame = dummyUserFrame;
-    userShutDown = fn2;
-    hell_io_Init();
-    hell_c_Init();
-    hell_c_AddCommand("quit", hell_Quit);
-    hell_i_Init(initConsole);
-    const Hell_C_Var* dedicated = hell_c_GetVar("dedicated", "0", 0);
+    memset(hellmouth, 0, sizeof(Hell_Hellmouth));
+    assert(queue);
+    assert(grimoire);
+    hell_InitLogger();
+    hell_Announce("Creating Hellmouth...\n");
+    hellmouth->grimoire = grimoire;
+    hellmouth->eventqueue = queue;
+    hellmouth->console = console;
+    hellmouth->windowCount = windowCount;
+    hellmouth->windows = windows;
+    hellmouth->userFrame = userFrame ? userFrame : dummyUserFrame;
+    hellmouth->userShutDown = userShutDown;
+    hell_AddCommand(grimoire, "quit", hell_Quit, hellmouth);
+    const Hell_C_Var* dedicated = hell_GetVar(grimoire, "dedicated", "0", 0);
     sv_Init();
     if (!dedicated->value)
         cl_Init();
-    hell_Announce("Initialized.\n");
+    hell_Announce("Hellmouth created.\n");
 }
 
-const Hell_Window* hell_OpenWindow(unsigned w, unsigned h, const char* title)
+void hell_Frame(Hell_Hellmouth* h, Tick delta)
 {
-    return hell_w_Init(w, h, title);
+    hell_CoagulateInput(h->eventqueue, h->console, h->windowCount, h->windows);
+    hell_SolveInput(h->eventqueue);
+    hell_Incantate(h->grimoire);
 }
 
-void hell_Frame(Tick delta)
+void hell_Loop(Hell_Hellmouth* h)
 {
-    hell_i_DrainEvents();
-    hell_i_PumpEvents();
-    hell_c_Execute();
-}
-
-void hell_Loop(void)
-{
-    const Var* vFps = hell_c_GetVar("maxFps", "60", HELL_C_VAR_ARCHIVE_BIT);
+    const Var* vFps = hell_GetVar(h->grimoire, "maxFps", "60", HELL_C_VAR_ARCHIVE_BIT);
     const double targetFrameLength = (1.0 / vFps->value);
     Tick startTick = hell_Time(); 
     Tick endTick = startTick;
@@ -63,24 +76,36 @@ void hell_Loop(void)
         // this is just a place holder
         hell_Sleep(targetFrameLength);
         endTick = hell_Time();
-        hell_Frame(endTick - startTick);
-        userFrame();
+        hell_Frame(h, endTick - startTick);
+        h->userFrame();
         startTick = endTick;
     }
 }
 
-void hell_ShutDown(void)
+void hell_DestroyHellmouth(Hell_Hellmouth* h)
 {
-    hell_w_CleanUp();
-    hell_i_CleanUp();
+    for (int i = 0; i < h->windowCount; i++)
+    {
+        hell_DestroyWindow(h->windows[i]);
+    }
+    hell_DestroyGrimoire(h->grimoire);
+    hell_DestroyEventQueue(h->eventqueue);
+    hell_DestroyConsole(h->console);
+    hell_ShutdownLogger();
     hell_Announce("Shut Down.\n");
-    hell_io_Shutdown();
 }
 
-void hell_Quit(void)
+// if we're going to call exit it doesn't make sense to have anyshut down code run.
+void hell_Quit(void* hellmouthvoid)
 {
-    if (userShutDown)
-        userShutDown();
-    hell_ShutDown();
+    Hell_Hellmouth* hellmouth = (Hell_Hellmouth*)hellmouthvoid;
+    if (hellmouth->userShutDown)
+        hellmouth->userShutDown();
+    hell_DestroyHellmouth(hellmouth);
     exit(0);
+}
+
+uint64_t hell_SizeOfHellmouth(void)
+{
+    return sizeof(Hell_Hellmouth);
 }

@@ -4,7 +4,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef void (*Hell_C_CmdFn)(void);
+typedef struct Hell_Grimoire Hell_Grimoire;
+typedef struct Hell_EventQueue Hell_EventQueue;
+typedef void (*Hell_CmdFn)(void* data);
 
 typedef enum {
     HELL_C_VAR_ARCHIVE_BIT = 1 << 0,
@@ -20,14 +22,16 @@ typedef struct Hell_C_Var {
     struct Hell_C_Var* next;
 } Hell_C_Var;
 
-void              hell_c_Init(void);
-void              hell_c_AddCommand(const char* cmdName, Hell_C_CmdFn fn);
-void              hell_c_AddText(const char* text);
-void              hell_c_AddNText(const char* text, unsigned int len);
-void              hell_c_AddChar(const char c);
-char*             hell_c_Argv(unsigned int i);
-void              hell_c_Execute(void);
-void              hell_c_SetVar(const char* name, const char* value, const Hell_C_VarFlagBits flags);
-const Hell_C_Var* hell_c_GetVar(const char* name, const char* value, const Hell_C_VarFlagBits flags);
+void  hell_CreateGrimoire(Hell_EventQueue* queue, Hell_Grimoire* grim);
+void  hell_DestroyGrimoire(Hell_Grimoire* grim);
+void  hell_AddCommand(Hell_Grimoire*, const char* cmdName, Hell_CmdFn, void* data);
+void  hell_AddText(Hell_Grimoire*, const char* text);
+void  hell_AddNText(Hell_Grimoire*, const char* text, unsigned int len);
+void  hell_AddChar(Hell_Grimoire*, const char c);
+char* hell_Argv(Hell_Grimoire*, unsigned int i);
+void  hell_Incantate(Hell_Grimoire*);
+void  hell_SetVar(Hell_Grimoire*, const char* name, const char* value,
+                    const Hell_C_VarFlagBits flags);
+const Hell_C_Var* hell_GetVar(Hell_Grimoire*, const char* name, const char* value, const Hell_C_VarFlagBits flags);
 
 #endif /* end of include guard: HYDROGEN_CMD_H */

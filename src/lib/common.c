@@ -33,7 +33,7 @@ void hell_Print(const char* fmt, ...)
     vsnprintf(msg, sizeof(msg), fmt, argptr);
     va_end(argptr);
     fputs(msg, stdout);
-    hell_io_WriteToLog(msg);
+    hell_WriteToLog(msg);
 }
 
 void hell_Announce(const char* fmt, ...)
@@ -46,7 +46,7 @@ void hell_Announce(const char* fmt, ...)
     vsnprintf(msg + l, sizeof(msg) - l, fmt, argptr);
     va_end(argptr);
     fputs(msg, stdout);
-    hell_io_WriteToLog(msg);
+    hell_WriteToLog(msg);
 }
 
 void hell_Abort(void)
@@ -65,7 +65,7 @@ void hell_Error( Hell_ErrorCode errorCode, const char *fmt, ... )
 	va_end (argptr);
     c += snprintf(errorMsgBuffer + c, len - c, "Errno %d\n", errno);
     fputs(errorMsgBuffer, stderr);
-    hell_io_WriteToLog(errorMsgBuffer);
+    hell_WriteToLog(errorMsgBuffer);
     if (errorCode == HELL_ERR_FATAL)
         hell_Abort();
 }

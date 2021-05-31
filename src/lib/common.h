@@ -3,6 +3,9 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "cmd.h"
+#include "window.h"
+#include "input.h"
 #include "types.h"
 
 typedef enum {
@@ -10,7 +13,8 @@ typedef enum {
     HELL_ERR_MILD
 } Hell_ErrorCode;
 
-struct Hell_Window;
+typedef struct Hell_Window Hell_Window;
+typedef struct Hell_Hellmouth Hell_Hellmouth;
 
 typedef void (*Hell_FrameFn)(void);
 typedef void (*Hell_ShutDownFn)(void);
@@ -30,6 +34,10 @@ Hell_Tick hell_Time(void);
 uint64_t  hell_Align(const uint64_t quantity, const uint32_t alignment);
 void      hell_BitPrint(const void* const thing,  const uint32_t bitcount);
 void      hell_BytePrint(const void* const thing, const uint32_t byteCount);
+void hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Console* console,
+                     uint32_t windowCount, Hell_Window* windows[windowCount],
+                     Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown,
+                     Hell_Hellmouth* hellmouth);
 
 // sleep for s seconds
 void     hell_Sleep(double s);
@@ -41,20 +49,24 @@ void*    hell_LoadSymbol(void* module, const char* symname);
 bool     hell_FileExists(const char* path);
 
 // uber function that calls the individual initializers in the correct order
-void     hell_Init(bool initConsole, Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown);
 
-const struct Hell_Window* hell_OpenWindow(unsigned width, unsigned height, const char* title);
+const Hell_Window* hell_OpenWindow(unsigned width, unsigned height, const char* title);
 
 // run run run and never return
-void     hell_Loop(void);
+void     hell_Loop(Hell_Hellmouth*);
 
-void     hell_Frame(Hell_Tick dt); // run single frame
+void     hell_Frame(Hell_Hellmouth*, Hell_Tick dt); // run single frame
 
 // uber function that call the individual shut down functions in the correct order
 void     hell_ShutDown(void);
 
 // calls shutdown and exits the program
-void     hell_Quit(void);
+void     hell_Quit(void*);
 
+uint64_t hell_SizeOfGrimoire(void);
+uint64_t hell_SizeOfConsole(void);
+uint64_t hell_SizeOfEventQueue(void);
+uint64_t hell_SizeOfWindow(void);
+uint64_t hell_SizeOfHellmouth(void);
 
 #endif /* end of include guard: HELL_COM_H */
