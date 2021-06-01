@@ -325,3 +325,8 @@ uint64_t hell_SizeOfGrimoire(void)
 {
     return sizeof(Hell_Grimoire);
 }
+
+Hell_Grimoire* hell_AllocGrimoire(void)
+{
+    return hell_Malloc(sizeof(Hell_Grimoire));
+}

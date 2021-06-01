@@ -109,3 +109,8 @@ uint64_t hell_SizeOfHellmouth(void)
 {
     return sizeof(Hell_Hellmouth);
 }
+
+Hell_Hellmouth* hell_AllocHellmouth(void)
+{
+    return hell_Malloc(sizeof(Hell_Hellmouth));
+}

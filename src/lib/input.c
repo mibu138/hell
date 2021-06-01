@@ -459,3 +459,17 @@ uint64_t hell_SizeOfWindow(void)
     return sizeof(Hell_Window);
 }
 
+Hell_Window* hell_AllocWindow(void)
+{
+    return hell_Malloc(sizeof(Hell_Window));
+}
+
+Hell_EventQueue* hell_AllocEventQueue(void)
+{
+    return hell_Malloc(sizeof(Hell_EventQueue));
+}
+
+Hell_Console* hell_AllocConsole(void)
+{
+    return hell_Malloc(sizeof(Hell_Console));
+}
