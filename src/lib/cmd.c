@@ -164,8 +164,8 @@ static Var* findVar(Grim* grim, const char* name)
 static bool consoleEventHandler(const Hell_Event* event, void* pGrimoire)
 {
     Hell_Grimoire* grim = (Hell_Grimoire*)pGrimoire;
-    hell_AddNText(grim, event->data.consoleData.ptr,
-                    event->data.consoleData.ptrLen);
+    hell_AddNText(grim, event->data.conData.ptr,
+                    event->data.conData.ptrLen);
     hell_AddChar(grim, '\n');
     return true;
 }
@@ -285,7 +285,7 @@ void hell_CreateGrimoire(Hell_EventQueue* queue, Grim* grim)
     memset(grim, 0, sizeof(Hell_Grimoire));
     cmdInit(grim);
     varInit(grim);
-    hell_Subscribe(queue, HELL_EVENT_MASK_CONSOLE_BIT, consoleEventHandler, grim);
+    hell_Subscribe(queue, HELL_EVENT_MASK_CONSOLE_BIT, 0, consoleEventHandler, grim);
 }
 
 void hell_Incantate(Grim* grim)

@@ -3,6 +3,8 @@
 
 #define	MAX_EDIT_LINE	256
 
+#include "types.h"
+
 typedef enum {
     HELL_WINDOW_XCB_TYPE,
     HELL_WINDOW_WIN32_TYPE
@@ -11,6 +13,7 @@ typedef enum {
 typedef struct Hell_Window {
     unsigned int    width;
     unsigned int    height;
+    Hell_WindowID   id;
     Hell_WindowType type;
     void*           typeSpecificData;
 } Hell_Window;

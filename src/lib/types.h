@@ -6,6 +6,8 @@
 typedef uint8_t  Hell_Byte;
 typedef uint64_t Hell_Size;
 typedef uint64_t Hell_Tick;
+typedef uint16_t Hell_WindowID;
+#define HELL_WINDOW_ID_MAX UINT16_MAX
 
 #ifdef HELL_SIMPLE_TYPE_NAMES
 typedef Hell_Byte Byte;

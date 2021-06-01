@@ -199,7 +199,7 @@ start:
             {
                 uint32_t keyCode = getXcbKeyCode(xcbWindow->keysymbols, (xcb_key_press_event_t*)xEvent);
                 if (keyCode != 0)
-                    hell_PushKeyDownEvent(queue, keyCode);
+                    hell_PushKeyDownEvent(queue, keyCode, window->id);
                 break;
             }
             case XCB_KEY_RELEASE: 
@@ -221,7 +221,7 @@ start:
                     // if next is not a press or the key code is different then neither are autorepeats
                     if (type != XCB_KEY_PRESS || keyCode != keyCodeNext)
                     {
-                        hell_PushKeyUpEvent(queue, keyCode);
+                        hell_PushKeyUpEvent(queue, keyCode, window->id);
                         free(xEvent);
                         xEvent = next;
                         goto start;
@@ -230,25 +230,25 @@ start:
                         free(next);
                     break;
                 }
-                hell_PushKeyUpEvent(queue, keyCode);
+                hell_PushKeyUpEvent(queue, keyCode, window->id);
                 break;
             }
             case XCB_BUTTON_PRESS:
             {
                 Hell_MouseEventData data = getXcbMouseData(xEvent);
-                hell_PushMouseDownEvent(queue, data.x, data.y, data.buttonCode);
+                hell_PushMouseDownEvent(queue, data.x, data.y, data.buttonCode, window->id);
                 break;
             }
             case XCB_BUTTON_RELEASE:
             {
                 Hell_MouseEventData data = getXcbMouseData(xEvent);
-                hell_PushMouseUpEvent(queue, data.x, data.y, data.buttonCode);
+                hell_PushMouseUpEvent(queue, data.x, data.y, data.buttonCode, window->id);
                 break;
             }
             case XCB_MOTION_NOTIFY:
             {
                 Hell_MouseEventData data = getXcbMouseData(xEvent);
-                hell_PushMouseMotionEvent(queue, data.x, data.y, data.buttonCode);
+                hell_PushMouseMotionEvent(queue, data.x, data.y, data.buttonCode, window->id);
                 break;
             }
             case XCB_RESIZE_REQUEST:
@@ -258,7 +258,7 @@ start:
                     break;
                 window->width = data.width;
                 window->height = data.height;
-                hell_PushWindowResizeEvent(queue, data.width, data.height);
+                hell_PushWindowResizeEvent(queue, data.width, data.height, window->id);
                 break;
             }
             // for some reason resize events seem to come through here.... but so do window moves...
@@ -270,7 +270,7 @@ start:
                     break;
                 window->width = data.width;
                 window->height = data.height;
-                hell_PushWindowResizeEvent(queue, data.width, data.height);
+                hell_PushWindowResizeEvent(queue, data.width, data.height, window->id);
                 break;
             }
             default: break;
@@ -290,6 +290,7 @@ inline static void destroyXcbWindow(Hell_Window* window)
     hell_Free(xcbWindow);
     memset(xcbWindow, 0, sizeof(Hell_XcbWindow));
 }
+
 
 #endif
 #endif

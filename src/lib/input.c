@@ -41,9 +41,10 @@ typedef struct {
 #define MAX_SUBSCRIBERS 32
 
 typedef struct {
-    void*               data;
+    void*             data;
     Hell_SubscriberFn func;
     Hell_EventMask    eventMask;
+    Hell_WindowID     windowID;
 } Hell_Subscription;
 
 //
@@ -260,10 +261,10 @@ void hell_CoagulateInput(Hell_EventQueue* queue, Hell_Console* console, uint32_t
             // this should put a trailing null at the end of the data, but not sure
             // if we need this...
             // ev.data.consoleData.ptrLen = strnlen(ci, MAX_EDIT_LINE - 1) + 1;
-            ev.data.consoleData.ptrLen = strnlen(ci, MAX_EDIT_LINE);
-            ev.data.consoleData.ptr    = hell_Malloc(ev.data.consoleData.ptrLen);
+            ev.data.conData.ptrLen = strnlen(ci, MAX_EDIT_LINE);
+            ev.data.conData.ptr    = hell_Malloc(ev.data.conData.ptrLen);
             // should copy a null at the end
-            memcpy(ev.data.consoleData.ptr, ci, ev.data.consoleData.ptrLen);
+            memcpy(ev.data.conData.ptr, ci, ev.data.conData.ptrLen);
             ev.time = hell_Time();
             pushEvent(queue, ev);
         }
@@ -286,25 +287,47 @@ hell_SolveInput(Hell_EventQueue* queue)
         // event->time);
         for (int i = 0; i < queue->subscriberCount; i++)
         {
-            if (queue->subscriptions[i].eventMask & event->mask)
-                if (queue->subscriptions[i].func(event, queue->subscriptions[i].data))
-                    break; // if func returns true the event break from the loop
+            const Hell_Subscription sub = queue->subscriptions[i];
+            if (sub.eventMask & event->mask)
+            {
+                // note the event may not have the window mask set and this condition will still go through
+                // thus its up to the subscriber to set the window bit if they way to only recieve events for a cetain 
+                // window
+                if (sub.eventMask & HELL_EVENT_MASK_WINDOW_BIT)
+                {
+                    if(sub.windowID == event->data.winData.windowID)
+                    {
+                        if (sub.func(event, sub.data))
+                        {
+                            break; // if func returns true the event break from the loop
+                        }
+                    }
+                }
+                else 
+                {
+                    if (sub.func(event, sub.data))
+                    {
+                        break; // if func returns true the event break from the loop
+                    }
+                }
+            }
         }
         if (event->type == HELL_EVENT_MASK_CONSOLE_BIT)
         {
-            hell_Free(event->data.consoleData.ptr);
+            hell_Free(event->data.conData.ptr);
         }
     }
 }
 
 void
-hell_Subscribe(Hell_EventQueue* queue, Hell_EventMask mask, Hell_SubscriberFn func,
+hell_Subscribe(Hell_EventQueue* queue, Hell_EventMask mask, Hell_WindowID winid, Hell_SubscriberFn func,
                            void* data)
 {
     queue->subscriptions[queue->subscriberCount++] =
         (Hell_Subscription){
             .data = data, 
             .func = func, 
+            .windowID = winid,
             .eventMask = mask};
 }
 
@@ -320,75 +343,81 @@ hell_Time()
 
 void
 hell_PushMouseDownEvent(Hell_EventQueue* queue, int16_t x, int16_t y,
-                        uint8_t buttonCode)
+                        uint8_t buttonCode, Hell_WindowID winid)
 {
     Hell_Event ev = {
         .type = HELL_EVENT_TYPE_MOUSEDOWN,
         .mask = HELL_EVENT_MASK_MOUSE_BIT,
         .time = hell_Time(),
     };
-    ev.data.mouseData.x          = x;
-    ev.data.mouseData.y          = y;
-    ev.data.mouseData.buttonCode = buttonCode;
+    ev.data.winData.data.mouseData.x          = x;
+    ev.data.winData.data.mouseData.y          = y;
+    ev.data.winData.data.mouseData.buttonCode = buttonCode;
+    ev.data.winData.windowID = winid;
     pushEvent(queue, ev);
 }
 
 void
 hell_PushMouseUpEvent(Hell_EventQueue* queue, int16_t x, int16_t y,
-                      uint8_t buttonCode)
+                      uint8_t buttonCode, Hell_WindowID winid)
 {
     Hell_Event ev = {
         .type = HELL_EVENT_TYPE_MOUSEUP,
         .mask = HELL_EVENT_MASK_MOUSE_BIT,
         .time = hell_Time(),
     };
-    ev.data.mouseData.x          = x;
-    ev.data.mouseData.y          = y;
-    ev.data.mouseData.buttonCode = buttonCode;
+    ev.data.winData.data.mouseData.x          = x;
+    ev.data.winData.data.mouseData.y          = y;
+    ev.data.winData.data.mouseData.buttonCode = buttonCode;
+    ev.data.winData.windowID   = winid;
     pushEvent(queue, ev);
 }
 
 void
 hell_PushMouseMotionEvent(Hell_EventQueue* queue, int16_t x, int16_t y,
-                          uint8_t buttonCode)
+                          uint8_t buttonCode, Hell_WindowID winid)
 {
     Hell_Event ev = {
         .type = HELL_EVENT_TYPE_MOTION,
         .mask = HELL_EVENT_MASK_MOUSE_BIT,
         .time = hell_Time(),
     };
-    ev.data.mouseData.x          = x;
-    ev.data.mouseData.y          = y;
-    ev.data.mouseData.buttonCode = buttonCode;
+    ev.data.winData.data.mouseData.x          = x;
+    ev.data.winData.data.mouseData.y          = y;
+    ev.data.winData.data.mouseData.buttonCode = buttonCode;
+    ev.data.winData.windowID   = winid;
     pushEvent(queue, ev);
 }
 
 void
-hell_PushKeyDownEvent(Hell_EventQueue* queue, uint32_t keyCode)
+hell_PushKeyDownEvent(Hell_EventQueue* queue, uint32_t keyCode, Hell_WindowID winid)
 {
     Hell_Event ev = {
         .type = HELL_EVENT_TYPE_KEYDOWN, .mask = HELL_EVENT_MASK_KEY_BIT, .time = hell_Time()};
-    ev.data.keyCode = keyCode;
+    ev.data.winData.data.keyData.keyCode = keyCode;
+    ev.data.winData.windowID = winid;
     pushEvent(queue, ev);
 }
 
 void
-hell_PushKeyUpEvent(Hell_EventQueue* queue, uint32_t keyCode)
+hell_PushKeyUpEvent(Hell_EventQueue* queue, uint32_t keyCode, Hell_WindowID winid)
 {
     Hell_Event ev = {
         .type = HELL_EVENT_TYPE_KEYUP, .mask = HELL_EVENT_MASK_KEY_BIT, .time = hell_Time()};
-    ev.data.keyCode = keyCode;
+    ev.data.winData.data.keyData.keyCode = keyCode;
+    ev.data.winData.windowID = winid;
     pushEvent(queue, ev);
 }
 
 void
 hell_PushWindowResizeEvent(Hell_EventQueue* queue, unsigned int width,
-                           unsigned int height)
+                           unsigned int height, Hell_WindowID winid)
 {
     Hell_Event ev = {
         .time = hell_Time(), .type = HELL_EVENT_TYPE_RESIZE, .mask = HELL_EVENT_MASK_WINDOW_BIT};
-    ev.data.resizeData.width  = width;
-    ev.data.resizeData.height = height;
+    ev.data.winData.data.resizeData.width  = width;
+    ev.data.winData.data.resizeData.height = height;
+    ev.data.winData.windowID = winid;
     pushEvent(queue, ev);
 }
 

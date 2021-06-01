@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     hell_CreateEventQueue(eventQueue);
     hell_CreateGrimoire(eventQueue, grimoire);
     hell_CreateConsole(console);
-    hell_CreateWindow(500, 500, NULL, window);
+    hell_CreateWindow(eventQueue, 500, 500, NULL, window);
     hell_CreateHellmouth(grimoire, eventQueue, console, 1, &window, NULL, NULL, hellmouth);
     hell_Loop(hellmouth);
     return 0;

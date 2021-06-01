@@ -3,16 +3,17 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <types.h>
 
 typedef struct {
-    int16_t  x;
-    int16_t  y;
-    uint8_t  buttonCode;
+    int16_t       x;
+    int16_t       y;
+    uint8_t       buttonCode;
 } Hell_MouseEventData;
 
 typedef struct {
-    uint16_t width;
-    uint16_t height;
+    uint16_t      width;
+    uint16_t      height;
 } Hell_ResizeEventData;
 
 typedef struct {
@@ -20,11 +21,31 @@ typedef struct {
     uint32_t         ptrLen;
 } Hell_ConsoleEventData;
 
+typedef struct {
+    uint32_t      keyCode;
+} Hell_KeyEventData;
+
 typedef union {
     Hell_MouseEventData   mouseData;
     Hell_ResizeEventData  resizeData;
-    Hell_ConsoleEventData consoleData;
-    uint32_t              keyCode;
+    Hell_KeyEventData     keyData;
+} Hell_InputData;
+
+// data that is captured via a window
+typedef struct {
+    Hell_InputData data;
+    Hell_WindowID  windowID;
+} Hell_WindowEventData;
+
+// data that is captured via a device directly
+typedef struct {
+    Hell_InputData data;
+} Hell_DeviceEventData;
+
+typedef union {
+    Hell_WindowEventData  winData;
+    Hell_DeviceEventData  devData;
+    Hell_ConsoleEventData conData;
 } Hell_EventData;
 
 typedef enum {
@@ -44,6 +65,7 @@ typedef enum {
     HELL_EVENT_MASK_MOUSE_BIT   = 1 << 2,
     HELL_EVENT_MASK_WINDOW_BIT  = 1 << 3,
     HELL_EVENT_MASK_CONSOLE_BIT = 1 << 4,
+    HELL_EVENT_MASK_DEVICE_BIT  = 1 << 5,
     HELL_EVENT_MASK_ALL_BIT     = ~(uint32_t)1
 } Hell_EventMaskBits;
 
@@ -76,7 +98,8 @@ void hell_CoagulateInput(Hell_EventQueue* queue, Hell_Console* console, uint32_t
 // drains the event queue and calls subscriber functions
 void hell_SolveInput(Hell_EventQueue* queue);
 
-void hell_Subscribe(Hell_EventQueue*, Hell_EventMask, Hell_SubscriberFn, void* data);
+void hell_Subscribe(Hell_EventQueue* queue, Hell_EventMask mask, Hell_WindowID winid, Hell_SubscriberFn func,
+                           void* data);
 void hell_Unsubscribe(Hell_EventQueue*, const Hell_SubscriberFn);
 
 void hell_CreateConsole(Hell_Console*);
@@ -85,15 +108,15 @@ void hell_DestroyConsole(Hell_Console*);
 void hell_DestroyEventQueue(Hell_EventQueue*);
 
 void hell_PushWindowResizeEvent(Hell_EventQueue*, uint32_t width,
-                                uint32_t height);
+                                uint32_t height, Hell_WindowID winid);
 void hell_PushMouseDownEvent(Hell_EventQueue*, int16_t x, int16_t y,
-                             uint8_t buttonCode);
+                             uint8_t buttonCode, Hell_WindowID winid);
 void hell_PushMouseUpEvent(Hell_EventQueue*, int16_t x, int16_t y,
-                           uint8_t buttonCode);
+                           uint8_t buttonCode, Hell_WindowID winid);
 void hell_PushMouseMotionEvent(Hell_EventQueue*, int16_t x, int16_t y,
-                               uint8_t buttonCode);
-void hell_PushKeyDownEvent(Hell_EventQueue*, uint32_t keyCode);
-void hell_PushKeyUpEvent(Hell_EventQueue*, uint32_t keyCode);
+                               uint8_t buttonCode, Hell_WindowID winid);
+void hell_PushKeyDownEvent(Hell_EventQueue*, uint32_t keyCode, Hell_WindowID winid);
+void hell_PushKeyUpEvent(Hell_EventQueue*, uint32_t keyCode, Hell_WindowID winid);
 void hell_PushEmptyEvent(Hell_EventQueue*);
 
 
