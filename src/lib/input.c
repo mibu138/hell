@@ -502,3 +502,32 @@ Hell_Console* hell_AllocConsole(void)
 {
     return hell_Malloc(sizeof(Hell_Console));
 }
+
+uint16_t 
+hell_GetWindowResizeWidth(const Hell_Event* event)
+{
+    assert(event->type == HELL_EVENT_TYPE_RESIZE);
+    return event->data.winData.data.resizeData.width;
+}
+
+uint16_t 
+hell_GetWindowResizeHeight(const Hell_Event* event)
+{
+    assert(event->type == HELL_EVENT_TYPE_RESIZE);
+    return event->data.winData.data.resizeData.height;
+}
+
+int16_t  hell_GetMouseX(const Hell_Event* event)
+{
+    return event->data.winData.data.mouseData.x;
+}
+int16_t  hell_GetMouseY(const Hell_Event* event)
+{
+    return event->data.winData.data.mouseData.y;
+}
+
+
+uint8_t hell_GetEventButtonCode(const Hell_Event* event)
+{
+    return event->data.winData.data.mouseData.buttonCode;
+}

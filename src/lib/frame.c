@@ -91,8 +91,8 @@ void hell_DestroyHellmouth(Hell_Hellmouth* h)
     hell_DestroyGrimoire(h->grimoire);
     hell_DestroyEventQueue(h->eventqueue);
     hell_DestroyConsole(h->console);
-    hell_ShutdownLogger();
     hell_Announce("Shut Down.\n");
+    hell_ShutdownLogger();
 }
 
 // if we're going to call exit it doesn't make sense to have anyshut down code run.

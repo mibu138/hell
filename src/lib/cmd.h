@@ -28,7 +28,7 @@ void  hell_AddCommand(Hell_Grimoire*, const char* cmdName, Hell_CmdFn, void* dat
 void  hell_AddText(Hell_Grimoire*, const char* text);
 void  hell_AddNText(Hell_Grimoire*, const char* text, unsigned int len);
 void  hell_AddChar(Hell_Grimoire*, const char c);
-char* hell_Argv(Hell_Grimoire*, unsigned int i);
+const char* hell_GetArg(Hell_Grimoire* grim, unsigned int i);
 void  hell_Incantate(Hell_Grimoire*);
 void  hell_SetVar(Hell_Grimoire*, const char* name, const char* value,
                     const Hell_C_VarFlagBits flags);

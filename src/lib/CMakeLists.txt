@@ -19,6 +19,7 @@ set(PUBLIC_HEADERS
     debug.h
     buffer.h
     hell.h
+    types.h
     input.h
     io.h
     len.h
@@ -28,8 +29,6 @@ set(PUBLIC_HEADERS
     types.h
     evcodes.h
     platform.h
-    xcb_window_type.h
-    win32_window_type.h
     window.h)
 
 include(author_library)

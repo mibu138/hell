@@ -170,7 +170,7 @@ static bool consoleEventHandler(const Hell_Event* event, void* pGrimoire)
     return true;
 }
 
-char* hell_Argv(Grim* grim, unsigned int i)
+const char* hell_GetArg(Grim* grim, unsigned int i)
 {
     if (i >= grim->cmdArgc)
         return "";

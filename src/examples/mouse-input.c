@@ -2,13 +2,13 @@
 
 bool mouseEventHandler1(const Hell_Event* event, void* data)
 {
-    hell_Print("fn1 :: x: %d y: %d\n", event->data.winData.data.mouseData.x, event->data.winData.data.mouseData.y);
+    hell_Print("fn1 :: x: %d y: %d\n", hell_GetMouseX(event), hell_GetMouseY(event));
     return true;
 }
 
 bool mouseEventHandler2(const Hell_Event* event, void* data)
 {
-    hell_Print("fn2 :: x: %d y: %d\n", event->data.winData.data.mouseData.x, event->data.winData.data.mouseData.y);
+    hell_Print("fn2 :: x: %d y: %d\n", hell_GetMouseX(event), hell_GetMouseY(event));
     return true;
 }
 

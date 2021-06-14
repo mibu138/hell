@@ -1,9 +1,0 @@
-HELL: Started console.
-HELL: Xcb Display initialized.
-HELL: Server Initialized.
-HELL: Client initialized.
-HELL: Initialized.
-HELL: Entering Hell Loop.
-HELL: Display shutdown.
-HELL: Input shutdown.
-HELL: Shut Down.

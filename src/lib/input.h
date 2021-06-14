@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <types.h>
+#include "types.h"
+#include <evcodes.h>
 
 typedef struct {
     int16_t       x;
@@ -119,5 +120,11 @@ void hell_PushKeyDownEvent(Hell_EventQueue*, uint32_t keyCode, Hell_WindowID win
 void hell_PushKeyUpEvent(Hell_EventQueue*, uint32_t keyCode, Hell_WindowID winid);
 void hell_PushEmptyEvent(Hell_EventQueue*);
 
+uint16_t hell_GetWindowResizeWidth(const Hell_Event* event);
+uint16_t hell_GetWindowResizeHeight(const Hell_Event* event);
+int16_t  hell_GetMouseX(const Hell_Event*);
+int16_t  hell_GetMouseY(const Hell_Event*);
+
+uint8_t hell_GetEventButtonCode(const Hell_Event* event);
 
 #endif /* end of include guard: HELL_INPUT_H */

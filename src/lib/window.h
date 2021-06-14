@@ -11,7 +11,7 @@ void hell_CreateWindow(Hell_EventQueue* queue, const uint16_t width, const uint1
 void               hell_DestroyWindow(Hell_Window*);
 // does nothing if window is not active
 void               hell_DrainWindowEvents(Hell_EventQueue*, Hell_Window*);
-const void*        hell_GetXcbConnectionPtr(const Hell_Window* window);
+const void*        hell_GetXcbConnection(const Hell_Window* window);
 
 const void*        hell_GetXcbWindowPtr(const Hell_Window* window);
 Hell_WindowID      hell_GetWindowID(const Hell_Window* window);
