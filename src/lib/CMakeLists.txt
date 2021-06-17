@@ -1,6 +1,7 @@
 set(SRCS
     client.c
     cmd.c
+    ds.c
     common.c
     debug.c
     buffer.c
@@ -16,6 +17,7 @@ set(PUBLIC_HEADERS
     client.h
     cmd.h
     common.h
+    ds.h
     debug.h
     buffer.h
     hell.h

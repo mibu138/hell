@@ -22,7 +22,10 @@ void hell_Print_Mat4(const float[4][4]);
 void hell_Announce(const char* fmt, ...);
 void hell_Error(Hell_ErrorCode code, const char* fmt, ...);
 
+// will error if allocation fails
 void* hell_Malloc(size_t size);
+// will error if allocation fails
+void* hell_Realloc(void* ptr, size_t size);
 void  hell_Free(void* ptr);
 char* hell_CopyString(const char* in);
 

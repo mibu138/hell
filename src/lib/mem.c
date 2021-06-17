@@ -4,12 +4,23 @@
 
 void* hell_Malloc(size_t size)
 {
-    return malloc(size);
+    void* ptr = malloc(size);
+    if (!ptr)
+        hell_Error(HELL_ERR_FATAL, "Allocation failed\n");
+    return ptr;
 }
 
 void hell_Free(void* ptr)
 {
     free(ptr);
+}
+
+void* hell_Realloc(void* ptr, size_t size)
+{
+    ptr = realloc(ptr, size);
+    if (!ptr)
+        hell_Error(HELL_ERR_FATAL, "Allocation failed\n");
+    return ptr;
 }
 
 char* hell_CopyString(const char* in)
