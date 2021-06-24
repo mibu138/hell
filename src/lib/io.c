@@ -44,6 +44,7 @@ createDir(void)
 void hell_InitLogger(void)
 {
     // only open the log file on first call
+    if (globalFileCounter) return;
     createDir();
     if (globalFileCounter == 0)
     {
@@ -68,6 +69,7 @@ void hell_ShutdownLogger(void)
 void hell_WriteToLog(const char* msg)
 {
     // probably want a lock here so multiple threads could write to log
+    hell_InitLogger(); // so we can call this without explicitly starting up hell
     int l = strnlen(msg, MAX_MSG_LEN);
     if (l == MAX_MSG_LEN)
         hell_Error(HELL_ERR_FATAL, "Message too long\n");

@@ -44,36 +44,33 @@ typedef struct Hell_Grimoire {
 // so we can rename the struct without having to change the signatures
 typedef Hell_Grimoire Grim;
 
-static void cmdListFn(void* data)
+static void cmdListFn(const Hell_Grimoire* grim, void* data)
 {
     // could filter based on 2nd argument at some point
     // char* match = NULL;
     // if (cmdArgc > 1)
     //     match = cmdArgv[1];
 
-    Hell_Grimoire* grim = (Hell_Grimoire*)data;
     for (Cmd* cmd = grim->commands; cmd; cmd = cmd->next)
         hell_Print("%s\n", cmd->name);
 }
 
-static void cmdEchoFn(void* data)
+static void cmdEchoFn(const Hell_Grimoire* grim, void* data)
 {
-    Hell_Grimoire* grim = (Hell_Grimoire*)data;
 	for (int i=1 ; i<grim->cmdArgc ; i++)
 		hell_Print("%s ", grim->cmdArgv[i]);
 	hell_Print("\n");
 }
 
-static void varListFn(void* data)
+static void varListFn(const Hell_Grimoire* grim, void* data)
 {
-    Hell_Grimoire* grim = (Hell_Grimoire*)data;
     for (Var* var = grim->variables; var; var = var->next)
     {
         hell_Print("%s: %f\n", var->name, var->value);
     }
 }
 
-static void varSetFn(void* data)
+static void varSetFn(const Hell_Grimoire* grim, void* data)
 {
 }
 
@@ -131,7 +128,7 @@ static void execute(Grim* grim, const char* line)
 				// let the cgame or game handle it
 				break;
 			} else {
-				cmd->function(cmd->data);
+				cmd->function(grim, cmd->data);
 			}
 			return;
 		}
@@ -150,7 +147,7 @@ static void varInit(Grim* grim)
 	hell_AddCommand(grim, "set", varSetFn, grim);
 }
 
-static Var* findVar(Grim* grim, const char* name)
+static Var* findVar(const Grim* grim, const char* name)
 {
     for (Var* var = grim->variables; var; var = var->next)
     {
@@ -170,7 +167,7 @@ static bool consoleEventHandler(const Hell_Event* event, void* pGrimoire)
     return true;
 }
 
-const char* hell_GetArg(Grim* grim, unsigned int i)
+const char* hell_GetArg(const Grim* grim, unsigned int i)
 {
     if (i >= grim->cmdArgc)
         return "";
