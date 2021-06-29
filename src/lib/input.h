@@ -126,5 +126,6 @@ int16_t  hell_GetMouseX(const Hell_Event*);
 int16_t  hell_GetMouseY(const Hell_Event*);
 
 uint8_t hell_GetEventButtonCode(const Hell_Event* event);
+uint8_t hell_GetEventKeyCode(const Hell_Event* event);
 
 #endif /* end of include guard: HELL_INPUT_H */

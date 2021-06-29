@@ -531,3 +531,8 @@ uint8_t hell_GetEventButtonCode(const Hell_Event* event)
 {
     return event->data.winData.data.mouseData.buttonCode;
 }
+
+uint8_t hell_GetEventKeyCode(const Hell_Event* event)
+{
+    return event->data.winData.data.keyData.keyCode;
+}
