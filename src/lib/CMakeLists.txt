@@ -39,3 +39,9 @@ author_library(hell
     SOURCES ${SRCS}
     PUBLIC_HEADERS ${PUBLIC_HEADERS}
     DEPS xcb dl xcb-keysyms)
+
+author_library(hellObj
+    TYPE OBJECT
+    EXPORT_NAME HellObj
+    SOURCES ${SRCS}
+    DEPS xcb dl xcb-keysyms)
