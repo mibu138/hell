@@ -26,6 +26,6 @@ void* hell_Realloc(void* ptr, size_t size)
 char* hell_CopyString(const char* in)
 {
     char* out = hell_Malloc(strlen(in) + 1);
-    strcpy(out, in);
+    strcpy(out, in); //includes the terminating null
     return out;
 }
