@@ -1,7 +1,4 @@
-hell
 build/*
-helltest
 .clangd
 .cache/
-helltest.exe
 compile_commands.json
