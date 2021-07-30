@@ -1,5 +1,6 @@
-add_executable(simple simple.c)
-add_executable(mouse mouse-input.c)
-
-target_link_libraries(simple Hell::Hell)
-target_link_libraries(mouse Hell::Hell)
+add_executable(simple)
+add_executable(mouse)
+target_sources(simple PRIVATE simple.c)
+target_sources(mouse  PRIVATE mouse-input.c)
+target_link_libraries(simple PRIVATE Hell::Hell)
+target_link_libraries(mouse  PRIVATE Hell::Hell)

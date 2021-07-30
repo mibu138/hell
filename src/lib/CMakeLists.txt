@@ -12,36 +12,14 @@ set(SRCS
     server.c
     window.c)
 
-set(PUBLIC_HEADERS 
-    attributes.h
-    client.h
-    cmd.h
-    common.h
-    ds.h
-    debug.h
-    buffer.h
-    hell.h
-    types.h
-    input.h
-    io.h
-    len.h
-    locations.h
-    minmax.h
-    server.h
-    types.h
-    evcodes.h
-    platform.h
-    window.h)
-
-include(author_library)
-author_library(hell
-    EXPORT_NAME Hell
-    SOURCES ${SRCS}
-    PUBLIC_HEADERS ${PUBLIC_HEADERS}
-    DEPS xcb dl xcb-keysyms)
-
-author_library(hellObj
-    TYPE OBJECT
-    EXPORT_NAME HellObj
-    SOURCES ${SRCS}
-    DEPS xcb dl xcb-keysyms)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+add_library(hellObj OBJECT)
+add_library(hell    SHARED)
+target_sources(hellObj PRIVATE ${SRCS})
+target_include_directories(hellObj 
+    PRIVATE "include/hell"
+    INTERFACE "include")
+target_link_libraries(hellObj INTERFACE xcb dl xcb-keysyms)
+target_link_libraries(hell PUBLIC hellObj)
+add_library(Hell::HellObj ALIAS hellObj)
+add_library(Hell::Hell    ALIAS hell)

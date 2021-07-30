@@ -1,4 +1,4 @@
-#include "hell.h"
+#include "hell/hell.h"
 
 bool mouseEventHandler1(const Hell_Event* event, void* data)
 {
