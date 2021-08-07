@@ -11,6 +11,7 @@
 #include <string.h>
 #define HELL_SIMPLE_TYPE_NAMES
 #include "types.h"
+#include "vars.h"
 
 typedef Hell_C_Var Var;
 
@@ -66,7 +67,7 @@ void hell_Frame(Hell_Hellmouth* h, Tick delta)
 
 void hell_Loop(Hell_Hellmouth* h)
 {
-    const Var* vFps = hell_GetVar(h->grimoire, "maxFps", "60", HELL_C_VAR_ARCHIVE_BIT);
+    const Var* vFps = hell_GetVar(h->grimoire, HELL_VAR_NAME_MAX_FPS, "60", HELL_C_VAR_ARCHIVE_BIT);
     const double targetFrameLength = (1.0 / vFps->value);
     Tick startTick = hell_Time(); 
     Tick endTick = startTick;
