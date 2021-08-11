@@ -33,7 +33,7 @@ typedef struct Hell_Hellmouth {
 
 void
 hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Console* console,
-                     uint32_t windowCount, Hell_Window* windows[windowCount],
+                     uint32_t windowCount, Hell_Window* windows[],
                      Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown,
                      Hell_Hellmouth* hellmouth)
 {
@@ -68,6 +68,7 @@ void hell_Loop(Hell_Hellmouth* h)
 {
     const Var* vFps = hell_GetVar(h->grimoire, "maxFps", "60", HELL_C_VAR_ARCHIVE_BIT);
     const double targetFrameLength = (1.0 / vFps->value);
+    hell_StartClock();
     Tick startTick = hell_Time(); 
     Tick endTick = startTick;
     hell_Announce("Entering Hell Loop.\n");

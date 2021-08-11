@@ -1,8 +1,7 @@
 #ifndef HELL_PLATFORM_H
 #define HELL_PLATFORM_H
 
-#ifdef _WIN32
-#define WINDOWS
+#ifdef WIN32
 #include <windows.h>
 #elif defined(__linux__)
 #define UNIX

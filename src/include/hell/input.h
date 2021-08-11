@@ -94,7 +94,7 @@ bool hell_ClockStarted(void);
 // generates events from input sources and moves them into the event queue.
 // neither window nor console are required. if they are null it just does not
 // try to generate events from them.
-void hell_CoagulateInput(Hell_EventQueue* queue, Hell_Console* console, uint32_t windowCount, Hell_Window* windows[windowCount]);
+void hell_CoagulateInput(Hell_EventQueue* queue, Hell_Console* console, uint32_t windowCount, Hell_Window* windows[]);
 
 // drains the event queue and calls subscriber functions
 void hell_SolveInput(Hell_EventQueue* queue);

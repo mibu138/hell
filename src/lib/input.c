@@ -11,13 +11,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
-#include <unistd.h>
 //
 #ifdef UNIX
+#include <unistd.h>
 #include <termios.h>
 // stash the tc at program start here so we can reset it on shut down
 struct termios origTc;
-#elif defined(WINDOWS)
+#elif WIN32
 #include <windows.h>
 #endif
 
@@ -67,7 +67,9 @@ typedef struct Hell_EventQueue {
     int                 tail;
 } Hell_EventQueue;
 
+#ifdef UNIX
 static_assert(STDIN_FILENO == 0, "We assume the the fd for stdin is 0");
+#endif
 
 static int  globalConsoleCounter;
 static bool globalClockStarted;
@@ -93,7 +95,7 @@ getUnixMicroSeconds(void)
     return ms;
 }
 
-#elif defined(WINDOWS)
+#elif defined(WIN32)
 
 static LARGE_INTEGER winEpoch;
 static LARGE_INTEGER winFreq;
@@ -128,12 +130,12 @@ initTime(void)
         return;
 #ifdef UNIX
     initUnixTime();
-#elif defined(WINDOWS)
+#elif defined(WIN32)
     initWinTime();
-    globalClockStarted = true;
 #else
 #error
 #endif
+    globalClockStarted = true;
 }
 
 static void
@@ -230,7 +232,7 @@ hell_CreateConsole(Hell_Console* console)
     }
     console->eraseCode = origTc.c_cc[VERASE];
     console->eofCode   = origTc.c_cc[VEOF];
-#elif defined(WINDOWS)
+#elif defined(WIN32)
 #endif
 }
 
@@ -246,7 +248,7 @@ hell_ClockStarted(void)
     return globalClockStarted;
 }
 
-void hell_CoagulateInput(Hell_EventQueue* queue, Hell_Console* console, uint32_t windowCount, Hell_Window* windows[windowCount])
+void hell_CoagulateInput(Hell_EventQueue* queue, Hell_Console* console, uint32_t windowCount, Hell_Window* windows[])
 {
     assert(queue);
     if (console)
@@ -336,7 +338,7 @@ hell_Time()
 {
 #ifdef UNIX
     return getUnixMicroSeconds();
-#elif defined(WINDOWS)
+#elif defined(WIN32)
     return getWinMicroSeconds();
 #endif
 }

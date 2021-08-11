@@ -28,7 +28,7 @@ void hell_AddFilterTag(const char* tag)
     assert(filterTagCount < MAX_FILTERED_TAGS);
 }
 
-void hell_AddFilterTags(const unsigned int count, const char* tags[count])
+void hell_AddFilterTags(const unsigned int count, const char* tags[])
 {
     for (int j = 0; j < count; j++)
     {

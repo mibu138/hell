@@ -2,48 +2,64 @@
 #define HELL_MS_WINDOW_H
 
 #include "platform.h"
-#ifdef WINDOWS
+#ifdef WIN32
 
 #include "window.h"
 #include <windowsx.h>
 #include <tchar.h>
 #include <stdio.h>
 #include "window.h"
-#include "win_local.h"
 #include "win32_window_type.h"
 #include <assert.h>
 #include "cmd.h"
+#include "private.h"
 #include "evcodes.h"
 #include "common.h"
+#include "win_local.h"
 
-static Win32Window win32Window;
+
+//static Win32Window win32Window;
 
 #define MS_WINDOW_CLASS_NAME "myWindowClass"
+
+
+typedef struct WinUserData {
+    Hell_EventQueue* evqueue;
+    Hell_WindowID    winId;
+} WinUserData;
+
+typedef struct {
+    HINSTANCE hinstance;
+    HWND      hwnd;
+    WinUserData userdata;
+} Win32Window;
 
 // Step 4: the Window Procedure
 inline static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     static bool keyDown = false;
     static uint32_t lastKey = 0;
+    WinUserData* ud = (WinUserData*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     switch(msg)
     {
+	case WM_CREATE: SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)((CREATESTRUCT*)lParam)->lpCreateParams); break;
         case WM_CLOSE: DestroyWindow(hwnd); break;
         case WM_DESTROY: PostQuitMessage(0); break;
-        case WM_LBUTTONDOWN: hell_i_PushMouseDownEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_LEFT); break;
-        case WM_RBUTTONDOWN: hell_i_PushMouseDownEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_RIGHT); break;
-        case WM_MBUTTONDOWN: hell_i_PushMouseDownEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_MID); break;
-        case WM_LBUTTONUP: hell_i_PushMouseUpEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_LEFT); break;
-        case WM_RBUTTONUP: hell_i_PushMouseUpEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_RIGHT); break;
-        case WM_MBUTTONUP: hell_i_PushMouseUpEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_MID); break;
-        case WM_MOUSEMOVE: hell_i_PushMouseMotionEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_LEFT); break;
-        case WM_SIZE: hell_i_PushWindowResizeEvent(LOWORD(lParam), HIWORD(lParam)); break;
+        case WM_LBUTTONDOWN: hell_PushMouseDownEvent(ud->evqueue, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_LEFT, ud->winId); break;
+        case WM_RBUTTONDOWN: hell_PushMouseDownEvent(ud->evqueue, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_RIGHT, ud->winId); break;
+        case WM_MBUTTONDOWN: hell_PushMouseDownEvent(ud->evqueue, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_MID, ud->winId); break;
+        case WM_LBUTTONUP: hell_PushMouseUpEvent(ud->evqueue, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_LEFT, ud->winId); break;
+        case WM_RBUTTONUP: hell_PushMouseUpEvent(ud->evqueue, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_RIGHT, ud->winId); break;
+        case WM_MBUTTONUP: hell_PushMouseUpEvent(ud->evqueue, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_MID, ud->winId); break;
+        case WM_MOUSEMOVE: hell_PushMouseMotionEvent(ud->evqueue, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_LEFT, ud->winId); break;
+        case WM_SIZE: hell_PushWindowResizeEvent(ud->evqueue, LOWORD(lParam), HIWORD(lParam), ud->winId); break;
         case WM_KEYDOWN: keyDown = true; break;
-        case WM_KEYUP: keyDown = false; hell_i_PushKeyUpEvent(lastKey); break;
+        case WM_KEYUP: keyDown = false; hell_PushKeyUpEvent(ud->evqueue, lastKey, ud->winId); break;
         case WM_CHAR: 
         {
             if (keyDown) // it could be that we only get WM_CHAR after a keydown... which would make this unnecesary
             {
-                hell_i_PushKeyDownEvent(wParam);
+                hell_PushKeyDownEvent(ud->evqueue, wParam, ud->winId);
                 lastKey = wParam;
             }
             break;
@@ -53,12 +69,15 @@ inline static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
     return 0;
 }
 
-inline static int initMsWindow(int width, int height, const char* name, Hell_Window* hellWindow)
+inline static int createWin32Window(Hell_EventQueue* queue, int width, int height, const char* name, Hell_Window* hellWindow)
 {
+    hellWindow->typeSpecificData = hell_Malloc(sizeof(Win32Window));
+    Win32Window* win32Window = (Win32Window*)hellWindow->typeSpecificData;
+    memset(win32Window, 0, sizeof(Win32Window));
     WNDCLASSEX wc;
 
     assert(winVars.instance);
-    win32Window.hinstance = winVars.instance;
+    win32Window->hinstance = winVars.instance;
 
     //Step 1: Registering the Window Class
     wc.cbSize        = sizeof(WNDCLASSEX);
@@ -66,7 +85,7 @@ inline static int initMsWindow(int width, int height, const char* name, Hell_Win
     wc.lpfnWndProc   = WndProc;
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
-    wc.hInstance     = win32Window.hinstance;
+    wc.hInstance     = win32Window->hinstance;
     wc.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
     wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
@@ -82,28 +101,27 @@ inline static int initMsWindow(int width, int height, const char* name, Hell_Win
     }
 
     // Step 2: Creating the Window
-    win32Window.hwnd = CreateWindowEx(
+    win32Window->hwnd = CreateWindowEx(
         WS_EX_CLIENTEDGE,
         MS_WINDOW_CLASS_NAME,
         _T("Title of my window"),
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, width, height,
-        NULL, NULL, win32Window.hinstance, NULL);
+        NULL, NULL, win32Window->hinstance, &win32Window->userdata);
 
-    if(win32Window.hwnd == NULL)
+    if(win32Window->hwnd == NULL)
     {
         MessageBox(NULL, _T("Window Creation Failed!"), _T("Error!"),
             MB_ICONEXCLAMATION | MB_OK);
         return 0;
     }
 
-    ShowWindow(win32Window.hwnd, SW_SHOWNORMAL);
-    UpdateWindow(win32Window.hwnd);
+    ShowWindow(win32Window->hwnd, SW_SHOWNORMAL);
+    UpdateWindow(win32Window->hwnd);
 
     hellWindow->type = HELL_WINDOW_WIN32_TYPE;
     hellWindow->width = width;
     hellWindow->height = height;
-    hellWindow->typeSpecificData = &win32Window;
 
     return 0;
 
@@ -118,7 +136,7 @@ inline static void drainMsEventQueue(void)
         if ( !GetMessage (&Msg, NULL, 0, 0) ) 
         {
             // X button hit.. i think. we quit.
-            hell_c_AddText("quit\n");
+            // hell_AddText("quit\n");
         } 
         // save the msg time, because wndprocs don't have access to the timestamp
         // g_wv.sysMsgTime = msg.time
@@ -127,7 +145,7 @@ inline static void drainMsEventQueue(void)
     }
 }
 
-inline static void cleanUpMs(void)
+inline static void destroyWin32Window(Hell_Window* window)
 {
 
 }

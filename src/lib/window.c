@@ -10,10 +10,9 @@
 
 #if defined(UNIX)
 #include "unix_window.h"
-#elif defined(WINDOWS)
-#include "win32_window.h"
-#include "win_local.h"
+#elif defined(WIN32)
 HellWinVars winVars;
+#include "win32_window.h"
 #endif
 
 // number of windows created since program start.
@@ -37,8 +36,8 @@ hell_CreateWindow(Hell_EventQueue* queue, const uint16_t width, const uint16_t h
     memset(window, 0, sizeof(Hell_Window));
 #if defined(UNIX)
     createXcbWindow(width, height, name, window);
-#elif defined(WINDOWS)
-    initMsWindow(width, height, name, window);
+#elif defined(WIN32)
+    createWin32Window(queue, width, height, name, window);
 #endif
     window->id = globalWindowCounter++;
     assert(globalWindowCounter < HELL_WINDOW_ID_MAX);
@@ -50,7 +49,7 @@ hell_DrainWindowEvents(Hell_EventQueue* queue, Hell_Window* window)
 {
 #if defined(UNIX)
     drainXcbEventQueue(queue, window);
-#elif defined(WINDOWS)
+#elif defined(WIN32)
     drainMsEventQueue();
 #endif
 }
@@ -60,13 +59,14 @@ hell_DestroyWindow(Hell_Window* window)
 {
 #if defined(UNIX)
     destroyXcbWindow(window);
-#elif defined(WINDOWS)
-    destroyMsWindow();
+#elif defined(WIN32)
+    destroyWin32Window(window);
 #endif
     memset(window, 0, sizeof(Hell_Window));
     hell_Announce("Display shutdown.\n");
 }
 
+#ifdef UNIX
 const void*
 hell_GetXcbConnection(const Hell_Window* window)
 {
@@ -80,6 +80,7 @@ hell_GetXcbWindowPtr(const Hell_Window* window)
     assert(window->type == HELL_WINDOW_XCB_TYPE);
     return &((Hell_XcbWindow*)window->typeSpecificData)->window;
 }
+#endif
 
 Hell_WindowID 
 hell_GetWindowID(const Hell_Window* window)
