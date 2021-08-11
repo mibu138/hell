@@ -70,6 +70,9 @@ void hell_DebugPrintImpl(const char* fmt, ...)
     //const Hell_C_Var* silent = hell_GetVar("debug_silent", "0", HELL_C_VAR_ARCHIVE_BIT);
     if (true)
         fputs(debugMsg, stderr);
+#if WIN32
+    OutputDebugString(debugMsg);
+#endif
     hell_WriteToLog(debugMsg);
 }
 
