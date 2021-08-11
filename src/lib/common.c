@@ -71,6 +71,9 @@ void hell_Error( Hell_ErrorCode errorCode, const char *fmt, ... )
 	va_end (argptr);
     c += snprintf(errorMsgBuffer + c, len - c, "Errno %d\n", errno);
     fputs(errorMsgBuffer, stderr);
+#if WIN32
+    OutputDebugString(errorMsgBuffer);
+#endif
     hell_WriteToLog(errorMsgBuffer);
     if (errorCode == HELL_ERR_FATAL)
         hell_Abort();
