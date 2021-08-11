@@ -84,13 +84,13 @@ hell_GetXcbWindowPtr(const Hell_Window* window)
 void*
 hell_GetHinstancePtr(const Hell_Window* window)
 {
-    assert(window->type == HELL_WIN32_WINDOW_TYPE_H);
+    assert(window->type == HELL_WINDOW_WIN32_TYPE);
     return &((Win32Window*)window->typeSpecificData)->hinstance;
 }
 void*
 hell_GetHwndPtr(const Hell_Window* window)
 {
-    assert(window->type == HELL_WIN32_WINDOW_TYPE_H);
+    assert(window->type == HELL_WINDOW_WIN32_TYPE);
     return &((Win32Window*)window->typeSpecificData)->hwnd;
 }
 #endif
