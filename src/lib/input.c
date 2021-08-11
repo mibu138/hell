@@ -207,6 +207,7 @@ pushEvent(Hell_EventQueue* queue, Hell_Event event)
 void
 hell_CreateEventQueue(Hell_EventQueue* queue)
 {
+    hell_StartClock(); // we must start the clock to start recieving events.
     memset(queue, 0, sizeof(Hell_EventQueue));
 }
 

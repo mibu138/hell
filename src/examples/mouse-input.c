@@ -29,7 +29,6 @@ int hellmain(void)
     Hell_EventQueue* queue     = hell_AllocEventQueue();
     Hell_Grimoire*   grimoire  = hell_AllocGrimoire();
     Hell_Hellmouth*  hellmouth = hell_AllocHellmouth();
-    hell_StartClock();
     hell_CreateConsole(console);
     hell_CreateEventQueue(queue);
     hell_CreateGrimoire(queue, grimoire);
