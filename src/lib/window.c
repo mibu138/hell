@@ -11,7 +11,6 @@
 #if defined(UNIX)
 #include "unix_window.h"
 #elif defined(WIN32)
-HellWinVars winVars;
 #include "win32_window.h"
 #endif
 
@@ -92,6 +91,11 @@ hell_GetHwndPtr(const Hell_Window* window)
 {
     assert(window->type == HELL_WINDOW_WIN32_TYPE);
     return &((Win32Window*)window->typeSpecificData)->hwnd;
+}
+void 
+hell_SetHinstance(HINSTANCE hinstance)
+{
+    winVars.instance = hinstance;
 }
 #endif
 

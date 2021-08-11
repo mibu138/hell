@@ -20,7 +20,7 @@ int hellmain(void)
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     _In_ PSTR lpCmdLine, _In_ int nCmdShow)
 {
-    winVars.instance = hInstance;
+    hell_SetHinstance(hInstance);
     hellmain();
     return 0;
 }

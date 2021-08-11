@@ -2,6 +2,11 @@
 #define HELL_WINDOW_H
 
 #include "types.h"
+#ifdef WIN32
+#include <windows.h>
+// should be called in WinMain before trying to open a window.
+void  hell_SetHinstance(HINSTANCE hinstance);
+#endif
 
 typedef struct Hell_Window Hell_Window;
 typedef struct Hell_EventQueue Hell_EventQueue;

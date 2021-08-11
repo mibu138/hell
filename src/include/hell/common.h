@@ -7,9 +7,6 @@
 #include "window.h"
 #include <stdbool.h>
 #include <stddef.h>
-#ifdef WIN32
-#include "win_local.h"
-#endif
 
 typedef enum { HELL_ERR_FATAL, HELL_ERR_MILD } Hell_ErrorCode;
 

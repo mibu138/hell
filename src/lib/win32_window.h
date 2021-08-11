@@ -9,19 +9,22 @@
 #include <tchar.h>
 #include <stdio.h>
 #include "window.h"
-#include "win32_window_type.h"
 #include <assert.h>
 #include "cmd.h"
 #include "private.h"
 #include "evcodes.h"
 #include "common.h"
-#include "win_local.h"
 
 
 //static Win32Window win32Window;
 
 #define MS_WINDOW_CLASS_NAME "myWindowClass"
 
+typedef struct {
+    HINSTANCE instance;
+} HellWinVars;
+
+HellWinVars winVars;
 
 typedef struct WinUserData {
     Hell_EventQueue* evqueue;

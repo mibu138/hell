@@ -1,5 +1,0 @@
-#ifndef HELL_WIN32_WINDOW_TYPE_H
-#define HELL_WIN32_WINDOW_TYPE_H
-
-
-#endif
