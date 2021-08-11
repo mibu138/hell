@@ -7,6 +7,7 @@ int hellmain(void)
     Hell_EventQueue* eventQueue = hell_Malloc(hell_SizeOfEventQueue());
     Hell_Window*     window     = hell_Malloc(hell_SizeOfWindow());
     Hell_Hellmouth*  hellmouth  = hell_Malloc(hell_SizeOfHellmouth());
+    hell_StartClock();
     hell_CreateEventQueue(eventQueue);
     hell_CreateGrimoire(eventQueue, grimoire);
     hell_CreateConsole(console);

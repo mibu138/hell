@@ -26,6 +26,8 @@
 typedef struct WinUserData {
     Hell_EventQueue* evqueue;
     Hell_WindowID    winId;
+    bool             keyDown;
+    uint32_t         lastKey;
 } WinUserData;
 
 typedef struct {
@@ -37,12 +39,19 @@ typedef struct {
 // Step 4: the Window Procedure
 inline static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    static bool keyDown = false;
-    static uint32_t lastKey = 0;
-    WinUserData* ud = (WinUserData*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    WinUserData* ud = NULL;
+    if (msg == WM_CREATE)
+    {
+        CREATESTRUCT* pCreate = (CREATESTRUCT*)(lParam);
+        ud = (WinUserData*)(pCreate->lpCreateParams);
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)ud);
+    }
+    else 
+    {
+	ud = (WinUserData*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    }
     switch(msg)
     {
-	case WM_CREATE: SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)((CREATESTRUCT*)lParam)->lpCreateParams); break;
         case WM_CLOSE: DestroyWindow(hwnd); break;
         case WM_DESTROY: PostQuitMessage(0); break;
         case WM_LBUTTONDOWN: hell_PushMouseDownEvent(ud->evqueue, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_LEFT, ud->winId); break;
@@ -53,14 +62,14 @@ inline static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
         case WM_MBUTTONUP: hell_PushMouseUpEvent(ud->evqueue, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_MID, ud->winId); break;
         case WM_MOUSEMOVE: hell_PushMouseMotionEvent(ud->evqueue, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), HELL_MOUSE_LEFT, ud->winId); break;
         case WM_SIZE: hell_PushWindowResizeEvent(ud->evqueue, LOWORD(lParam), HIWORD(lParam), ud->winId); break;
-        case WM_KEYDOWN: keyDown = true; break;
-        case WM_KEYUP: keyDown = false; hell_PushKeyUpEvent(ud->evqueue, lastKey, ud->winId); break;
+        case WM_KEYDOWN: ud->keyDown = true; break;
+        case WM_KEYUP: ud->keyDown = false; hell_PushKeyUpEvent(ud->evqueue, ud->lastKey, ud->winId); break;
         case WM_CHAR: 
         {
-            if (keyDown) // it could be that we only get WM_CHAR after a keydown... which would make this unnecesary
+            if (ud->keyDown) // it could be that we only get WM_CHAR after a keydown... which would make this unnecesary
             {
                 hell_PushKeyDownEvent(ud->evqueue, wParam, ud->winId);
-                lastKey = wParam;
+                ud->lastKey = wParam;
             }
             break;
         }
@@ -78,7 +87,12 @@ inline static int createWin32Window(Hell_EventQueue* queue, int width, int heigh
 
     assert(winVars.instance);
     win32Window->hinstance = winVars.instance;
+    win32Window->userdata.keyDown = false;
+    win32Window->userdata.lastKey = 0;
+    win32Window->userdata.evqueue = queue;
+    win32Window->userdata.winId = hellWindow->id;
 
+    //
     //Step 1: Registering the Window Class
     wc.cbSize        = sizeof(WNDCLASSEX);
     wc.style         = 0;
@@ -136,7 +150,8 @@ inline static void drainMsEventQueue(void)
         if ( !GetMessage (&Msg, NULL, 0, 0) ) 
         {
             // X button hit.. i think. we quit.
-            // hell_AddText("quit\n");
+            hell_Print("Shutting down\n");
+            exit(0); //simplest approach... but won't work with multiple windows
         } 
         // save the msg time, because wndprocs don't have access to the timestamp
         // g_wv.sysMsgTime = msg.time

@@ -34,12 +34,12 @@ hell_CreateWindow(Hell_EventQueue* queue, const uint16_t width, const uint16_t h
 {
     // once we support other platforms we can put a switch in here
     memset(window, 0, sizeof(Hell_Window));
+    window->id = globalWindowCounter++;
 #if defined(UNIX)
     createXcbWindow(width, height, name, window);
 #elif defined(WIN32)
     createWin32Window(queue, width, height, name, window);
 #endif
-    window->id = globalWindowCounter++;
     assert(globalWindowCounter < HELL_WINDOW_ID_MAX);
     hell_Subscribe(queue, HELL_EVENT_MASK_WINDOW_BIT, window->id, onWindowResize, window);
 }

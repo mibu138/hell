@@ -33,6 +33,9 @@ void hell_Print(const char* fmt, ...)
     vsnprintf(msg, sizeof(msg), fmt, argptr);
     va_end(argptr);
     fputs(msg, stdout);
+#if WIN32
+    OutputDebugString(msg);
+#endif
     hell_WriteToLog(msg);
 }
 
@@ -46,6 +49,9 @@ void hell_Announce(const char* fmt, ...)
     vsnprintf(msg + l, sizeof(msg) - l, fmt, argptr);
     va_end(argptr);
     fputs(msg, stdout);
+#if WIN32
+    OutputDebugString(msg);
+#endif
     hell_WriteToLog(msg);
 }
 

@@ -36,7 +36,6 @@ createDir(void)
 #elif defined(WIN32)
     DWORD pathlen = GetTempPathA(PATH_MAX, logpathbuf);
     assert(pathlen);
-    hell_Print("Got windows temp path: %s", logpathbuf);
     strcpy(logpathbuf + pathlen, "/hell"); // tack on our dir
 #else 
 #error "Not supported on this os yet"
@@ -46,13 +45,16 @@ createDir(void)
     {
         int er = mkdir(logpathbuf, 0700);
         if (er)
-            hell_Error(HELL_ERR_FATAL, "Error creating log directory\n");
+            fprintf(stderr, HELL_ERR_FATAL, "Error creating log directory\n");
     }
     strcat(logpathbuf, "/"LOG_NAME);
 }
 
 void hell_InitLogger(void)
 {
+#ifdef WIN32
+    return;
+#endif
     // only open the log file on first call
     if (globalFileCounter) return;
     createDir();
@@ -67,6 +69,9 @@ void hell_InitLogger(void)
 
 void hell_ShutdownLogger(void)
 {
+#ifdef WIN32
+    return;
+#endif
     globalFileCounter--;
     if (globalFileCounter == 0)
     {
@@ -78,6 +83,10 @@ void hell_ShutdownLogger(void)
 
 void hell_WriteToLog(const char* msg)
 {
+    // too much trouble to get this right
+#ifdef WIN32
+    return;
+#endif
     // probably want a lock here so multiple threads could write to log
     hell_InitLogger(); // so we can call this without explicitly starting up hell
     int l = strnlen(msg, MAX_MSG_LEN);
