@@ -1,6 +1,8 @@
+if(NOT HELL_SKIP_EXAMPLES)
 add_executable(simple)
 add_executable(mouse)
 target_sources(simple PRIVATE simple.c)
 target_sources(mouse  PRIVATE mouse-input.c)
 target_link_libraries(simple PRIVATE Hell::HellObj)
 target_link_libraries(mouse  PRIVATE Hell::HellObj)
+endif()

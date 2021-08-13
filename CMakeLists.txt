@@ -5,6 +5,7 @@ set(CMAKE_C_STANDARD 11)
 project(Hell LANGUAGES C VERSION 0.1.0)
 
 option(HELL_EXPORT_COMPILE_COMMANDS "Create compile_commands.json" ON)
+option(HELL_SKIP_EXAMPLES "Skip building hell examples" OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ${HELL_EXPORT_COMPILE_COMMANDS})
 
