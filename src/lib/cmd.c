@@ -1,6 +1,5 @@
 #include "cmd.h"
 #include "common.h"
-#include "error.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

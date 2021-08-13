@@ -10,10 +10,8 @@
 
 #if defined(UNIX)
 #include "unix_window.h"
-#elif defined(WINDOWS)
+#elif defined(WIN32)
 #include "win32_window.h"
-#include "win_local.h"
-HellWinVars winVars;
 #endif
 
 // number of windows created since program start.
@@ -35,12 +33,12 @@ hell_CreateWindow(Hell_EventQueue* queue, const uint16_t width, const uint16_t h
 {
     // once we support other platforms we can put a switch in here
     memset(window, 0, sizeof(Hell_Window));
+    window->id = globalWindowCounter++;
 #if defined(UNIX)
     createXcbWindow(width, height, name, window);
-#elif defined(WINDOWS)
-    initMsWindow(width, height, name, window);
+#elif defined(WIN32)
+    createWin32Window(queue, width, height, name, window);
 #endif
-    window->id = globalWindowCounter++;
     assert(globalWindowCounter < HELL_WINDOW_ID_MAX);
     hell_Subscribe(queue, HELL_EVENT_MASK_WINDOW_BIT, window->id, onWindowResize, window);
 }
@@ -50,7 +48,7 @@ hell_DrainWindowEvents(Hell_EventQueue* queue, Hell_Window* window)
 {
 #if defined(UNIX)
     drainXcbEventQueue(queue, window);
-#elif defined(WINDOWS)
+#elif defined(WIN32)
     drainMsEventQueue();
 #endif
 }
@@ -60,13 +58,14 @@ hell_DestroyWindow(Hell_Window* window)
 {
 #if defined(UNIX)
     destroyXcbWindow(window);
-#elif defined(WINDOWS)
-    destroyMsWindow();
+#elif defined(WIN32)
+    destroyWin32Window(window);
 #endif
     memset(window, 0, sizeof(Hell_Window));
     hell_Announce("Display shutdown.\n");
 }
 
+#ifdef UNIX
 const void*
 hell_GetXcbConnection(const Hell_Window* window)
 {
@@ -80,6 +79,25 @@ hell_GetXcbWindowPtr(const Hell_Window* window)
     assert(window->type == HELL_WINDOW_XCB_TYPE);
     return &((Hell_XcbWindow*)window->typeSpecificData)->window;
 }
+#elif WIN32
+void*
+hell_GetHinstancePtr(const Hell_Window* window)
+{
+    assert(window->type == HELL_WINDOW_WIN32_TYPE);
+    return &((Win32Window*)window->typeSpecificData)->hinstance;
+}
+void*
+hell_GetHwndPtr(const Hell_Window* window)
+{
+    assert(window->type == HELL_WINDOW_WIN32_TYPE);
+    return &((Win32Window*)window->typeSpecificData)->hwnd;
+}
+void 
+hell_SetHinstance(HINSTANCE hinstance)
+{
+    winVars.instance = hinstance;
+}
+#endif
 
 Hell_WindowID 
 hell_GetWindowID(const Hell_Window* window)

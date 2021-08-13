@@ -15,7 +15,7 @@
 #ifdef UNIX
 #include <unistd.h>
 #include <dlfcn.h>
-#elif defined(WINDOWS)
+#elif defined(WIN32)
 #include <winbase.h>
 #endif
 
@@ -33,6 +33,9 @@ void hell_Print(const char* fmt, ...)
     vsnprintf(msg, sizeof(msg), fmt, argptr);
     va_end(argptr);
     fputs(msg, stdout);
+#if WIN32
+    OutputDebugString(msg);
+#endif
     hell_WriteToLog(msg);
 }
 
@@ -46,6 +49,9 @@ void hell_Announce(const char* fmt, ...)
     vsnprintf(msg + l, sizeof(msg) - l, fmt, argptr);
     va_end(argptr);
     fputs(msg, stdout);
+#if WIN32
+    OutputDebugString(msg);
+#endif
     hell_WriteToLog(msg);
 }
 
@@ -57,14 +63,17 @@ void hell_Abort(void)
 void hell_Error( Hell_ErrorCode errorCode, const char *fmt, ... )
 {
 	va_list		argptr;
-    const int len = sizeof(errorMsgBuffer);
-    int c = 0;
+    const int64_t len = sizeof(errorMsgBuffer);
+    int64_t c = 0;
     c += sprintf(errorMsgBuffer + c, "***ERROR: ***\n");
 	va_start (argptr,fmt);
 	c += vsnprintf(errorMsgBuffer + c, len - c, fmt,argptr);
 	va_end (argptr);
     c += snprintf(errorMsgBuffer + c, len - c, "Errno %d\n", errno);
     fputs(errorMsgBuffer, stderr);
+#if WIN32
+    OutputDebugString(errorMsgBuffer);
+#endif
     hell_WriteToLog(errorMsgBuffer);
     if (errorCode == HELL_ERR_FATAL)
         hell_Abort();
@@ -131,7 +140,7 @@ void*    hell_LoadLibrary(const char* name)
 {
     #ifdef UNIX
     return dlopen(name, RTLD_LAZY);
-    #elif defined(WINDOWS)
+    #elif defined(WIN32)
     return LoadLibrary(name);
     #endif
 }
@@ -140,7 +149,7 @@ void*    hell_LoadSymbol(void* module, const char* symname)
 {
     #ifdef UNIX
     return dlsym(module, symname);
-    #elif defined(WINDOWS)
+    #elif defined(WIN32)
     return GetProcAddress(module, symname);
     #endif
 }
@@ -149,7 +158,7 @@ bool hell_FileExists(const char* path)
 {
     #ifdef UNIX
     return (access(path, F_OK) == 0);
-    #elif defined(WINDOWS)
+    #elif defined(WIN32)
     WIN32_FIND_DATA findData;
     HANDLE handle = FindFirstFile(path, &findData);
     bool found = handle != INVALID_HANDLE_VALUE;
@@ -164,7 +173,7 @@ void hell_Sleep(double s)
     uint64_t us = (s * 1000000);
     #ifdef UNIX
     usleep(us);
-    #elif defined(WINDOWS)
+    #elif defined(WIN32)
     Sleep(us / 1000);
     #endif
 }

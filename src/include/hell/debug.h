@@ -34,7 +34,7 @@ void     hell_DebugPrintImpl(const char* fmt, ...);
 
 // these only accept string literals.... 
 void hell_AddFilterTag(const char* tag);
-void hell_AddFilterTags(const unsigned int count, const char* tags[count]);
+void hell_AddFilterTags(const unsigned int count, const char* tags[]);
 
 #endif /* end of include guard: HELL_DEBUG_H */
 

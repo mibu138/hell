@@ -1,6 +1,6 @@
 #include "hell/common.h"
 
-int main(int argc, char *argv[])
+int hellmain(void)
 {
     Hell_Grimoire*   grimoire   = hell_Malloc(hell_SizeOfGrimoire());
     Hell_Console*    console    = hell_Malloc(hell_SizeOfConsole());
@@ -15,3 +15,18 @@ int main(int argc, char *argv[])
     hell_Loop(hellmouth);
     return 0;
 }
+
+#ifdef WIN32
+int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
+    _In_ PSTR lpCmdLine, _In_ int nCmdShow)
+{
+    hell_SetHinstance(hInstance);
+    hellmain();
+    return 0;
+}
+#elif UNIX
+int main(int argc, char* argv[])
+{
+    hellmain();
+}
+#endif

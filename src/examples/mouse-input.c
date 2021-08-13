@@ -21,7 +21,7 @@ static void userFrame(void)
     hell_Print("window2 :: w: %d h: %d\n", hell_GetWindowWidth(window2), hell_GetWindowHeight(window2));
 }
 
-int main(int argc, char *argv[])
+int hellmain(void)
 {
     window1   = hell_AllocWindow();
     window2   = hell_AllocWindow();
@@ -43,3 +43,18 @@ int main(int argc, char *argv[])
     hell_Loop(hellmouth);
     return 0;
 }
+
+#ifdef WIN32
+int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
+    _In_ PSTR lpCmdLine, _In_ int nCmdShow)
+{
+    hell_SetHinstance(hInstance);
+    hellmain();
+    return 0;
+}
+#elif UNIX
+int main(int argc, char* argv[])
+{
+    hellmain();
+}
+#endif

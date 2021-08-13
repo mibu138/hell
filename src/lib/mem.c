@@ -17,9 +17,10 @@ void hell_Free(void* ptr)
 
 void* hell_Realloc(void* ptr, size_t size)
 {
-    ptr = realloc(ptr, size);
-    if (!ptr)
+    void* newptr = realloc(ptr, size);
+    if (!newptr)
         hell_Error(HELL_ERR_FATAL, "Allocation failed\n");
+    ptr = newptr;
     return ptr;
 }
 

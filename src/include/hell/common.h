@@ -36,7 +36,7 @@ void      hell_BitPrint(const void* const thing, const uint32_t bitcount);
 void      hell_BytePrint(const void* const thing, const uint32_t byteCount);
 void      hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue,
                                Hell_Console* console, uint32_t windowCount,
-                               Hell_Window* windows[windowCount],
+                               Hell_Window* windows[],
                                Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown,
                                Hell_Hellmouth* hellmouth);
 

@@ -28,7 +28,7 @@ void hell_AddFilterTag(const char* tag)
     assert(filterTagCount < MAX_FILTERED_TAGS);
 }
 
-void hell_AddFilterTags(const unsigned int count, const char* tags[count])
+void hell_AddFilterTags(const unsigned int count, const char* tags[])
 {
     for (int j = 0; j < count; j++)
     {
@@ -70,6 +70,9 @@ void hell_DebugPrintImpl(const char* fmt, ...)
     //const Hell_C_Var* silent = hell_GetVar("debug_silent", "0", HELL_C_VAR_ARCHIVE_BIT);
     if (true)
         fputs(debugMsg, stderr);
+#if WIN32
+    OutputDebugString(debugMsg);
+#endif
     hell_WriteToLog(debugMsg);
 }
 
