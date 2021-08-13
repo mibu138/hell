@@ -2,9 +2,7 @@
 #define HELL_PLATFORM_H
 
 #ifdef WIN32
-#include <windows.h>
-#elif defined(__linux__)
-#define UNIX
+#elif UNIX
 #else
 #error "Platform not supported"
 #endif

@@ -32,7 +32,7 @@ static void
 createDir(void)
 {
 #if defined(UNIX)
-    createDir(UNIX_LOG_DIR);
+    strcpy(logpathbuf, UNIX_LOG_DIR);
 #elif defined(WIN32)
     DWORD pathlen = GetTempPathA(PATH_MAX, logpathbuf);
     assert(pathlen);
@@ -44,8 +44,9 @@ createDir(void)
     if (stat(logpathbuf, &st) == -1)
     {
         int er = mkdir(logpathbuf, 0700);
+        // Note we need to use fprintf here to avoid a recursive call to this function
         if (er)
-            fprintf(stderr, HELL_ERR_FATAL, "Error creating log directory\n");
+            fprintf(stderr, "Error creating log directory\n");
     }
     strcat(logpathbuf, "/"LOG_NAME);
 }
