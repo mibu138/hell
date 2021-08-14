@@ -8,4 +8,4 @@
     hell_CreateEventQueue(eventQueue);\
     hell_CreateGrimoire(eventQueue, grimoire);\
     hell_CreateWindow(eventQueue, 666, 666, NULL, window);\
-    hell_CreateHellmouth(grimoire, eventQueue, console, 1, &window, framefn, NULL, hellmouth)\
+    hell_CreateHellmouth(grimoire, eventQueue, console, 1, &window, framefn, NULL, hellmouth)
