@@ -65,3 +65,18 @@ void  hell_DestroyStack(Hell_Stack* stack, HellFreeFn userFree)
         hell_Free(stack->elems);
     memset(stack, 0, sizeof(*stack));
 }
+
+void hell_CreateArray(u32 count, u32 elemSize, HellAllocFn userAlloc, Hell_Array* array)
+{
+    assert(array);
+    assert(elemSize);
+    assert(count);
+    memset(array, 0, sizeof(Hell_Array));
+    array->count = count;
+    array->elemSize = elemSize;
+    if (userAlloc)
+        array->elems = userAlloc(count * elemSize);
+    else 
+        array->elems = hell_Malloc(count * elemSize);
+}
+
