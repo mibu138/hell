@@ -18,6 +18,11 @@ static void* stackPtr(Hell_Stack* stack)
     return (u8*)stack->elems + stack->count * stack->elemSize;
 }
 
+static void* stackLastElemPtr(Hell_Stack* stack)
+{
+    return (u8*)stack->elems + (stack->count - 1) * stack->elemSize;
+}
+
 // if userAlloc is null will default to Hell_Malloc
 void  hell_CreateStack(u32 capacity, u32 elemSize, HellAllocFn userAlloc, HellReallocFn userRealloc, Hell_Stack* stack)
 {
@@ -51,8 +56,8 @@ void hell_StackPush(Hell_Stack* stack, void* elem)
 void  hell_StackPop(Hell_Stack* stack, void* target)
 {
     assert(stack->count > 0);
-    void* stkptr = stackPtr(stack);
-    memcpy(target, stkptr, stack->elemSize);
+    void* lastel= stackLastElemPtr(stack);
+    memcpy(target, lastel, stack->elemSize);
     stack->count--;
 }
 
