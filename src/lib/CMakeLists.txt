@@ -9,8 +9,11 @@ set(SRCS
     input.c
     io.c
     mem.c
-    server.c
-    window.c)
+    server.c)
+
+if (NOT ${HELL_NO_WINDOW})
+    list(APPEND SRCS window.c)
+endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_library(hellObj OBJECT)
