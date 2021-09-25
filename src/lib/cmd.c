@@ -169,8 +169,13 @@ static bool consoleEventHandler(const Hell_Event* event, void* pGrimoire)
 const char* hell_GetArg(const Grim* grim, unsigned int i)
 {
     if (i >= grim->cmdArgc)
-        return "";
+        return ""; // we set to empty string so user can just go straight to strncmp'ing
     return grim->cmdArgv[i];
+}
+
+int hell_GetArgC(const Grim* grim)
+{
+    return grim->cmdArgc;
 }
 
 void hell_AddCommand(Hell_Grimoire* grim, const char* cmdName, Hell_CmdFn function, void* data)

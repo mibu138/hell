@@ -30,6 +30,7 @@ void  hell_AddText(Hell_Grimoire*, const char* text);
 void  hell_AddNText(Hell_Grimoire*, const char* text, unsigned int len);
 void  hell_AddChar(Hell_Grimoire*, const char c);
 const char* hell_GetArg(const Hell_Grimoire* grim, unsigned int i);
+int   hell_GetArgC(const Hell_Grimoire* grim);
 void  hell_Incantate(Hell_Grimoire*);
 void  hell_SetVar(Hell_Grimoire*, const char* name, const char* value,
                     const Hell_C_VarFlagBits flags);
