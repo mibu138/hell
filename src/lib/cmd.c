@@ -199,6 +199,34 @@ void hell_AddCommand(Hell_Grimoire* grim, const char* cmdName, Hell_CmdFn functi
     *pos = cmd;
 }
 
+void hell_AddCommand2(Hell_Grimoire* grim, const char* cmdName, Hell_CmdFn function, void* data, uint32_t dataSize)
+{
+    assert(strnlen(cmdName, MAX_CMD_NAME_LEN) < MAX_CMD_NAME_LEN);
+    Cmd* cmd;
+	for (cmd = grim->commands; cmd; cmd = cmd->next)
+	{
+		if (!strncmp(cmdName, cmd->name, MAX_CMD_NAME_LEN))
+		{
+			hell_Print("Cmd_AddCommand: %s already defined\n", cmdName);
+			return;
+		}
+	}
+
+    cmd = hell_Malloc(sizeof(Cmd));
+    strncpy(cmd->name, cmdName, MAX_CMD_NAME_LEN);
+    cmd->function = function;
+    cmd->data     = hell_Malloc(dataSize);
+    memcpy(cmd->data, data, dataSize);
+
+    /* link the command in by name order */
+    Cmd** pos = &grim->commands;
+    while (*pos && strcmp((*pos)->name, cmdName) < 0)
+        pos = &(*pos)->next;
+    cmd->next = *pos;
+    *pos = cmd;
+}
+
+
 void hell_SetVar(Hell_Grimoire* grim, const char* name, const char* value, const Hell_C_VarFlagBits flags)
 {
     Var* var = findVar(grim, name);

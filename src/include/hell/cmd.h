@@ -25,6 +25,7 @@ typedef struct Hell_C_Var {
 void  hell_CreateGrimoire(Hell_EventQueue* queue, Hell_Grimoire* grim);
 void  hell_DestroyGrimoire(Hell_Grimoire* grim);
 void  hell_AddCommand(Hell_Grimoire*, const char* cmdName, Hell_CmdFn, void* data);
+void  hell_AddCommand2(Hell_Grimoire* grim, const char* cmdName, Hell_CmdFn function, void* data, uint32_t dataSize);
 void  hell_AddText(Hell_Grimoire*, const char* text);
 void  hell_AddNText(Hell_Grimoire*, const char* text, unsigned int len);
 void  hell_AddChar(Hell_Grimoire*, const char c);
