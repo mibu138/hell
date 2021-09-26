@@ -13,6 +13,10 @@ typedef struct {
 } Hell_MouseEventData;
 
 typedef struct {
+    float         pressure;
+} Hell_StylusEventData;
+
+typedef struct {
     uint16_t      width;
     uint16_t      height;
 } Hell_ResizeEventData;
@@ -28,6 +32,7 @@ typedef struct {
 
 typedef union {
     Hell_MouseEventData   mouseData;
+    Hell_StylusEventData  stylusData;
     Hell_ResizeEventData  resizeData;
     Hell_KeyEventData     keyData;
 } Hell_InputData;
@@ -57,13 +62,14 @@ typedef enum {
     HELL_EVENT_TYPE_MOUSEUP,
     HELL_EVENT_TYPE_MOTION,
     HELL_EVENT_TYPE_RESIZE,
-    HELL_EVENT_TYPE_CONSOLE
+    HELL_EVENT_TYPE_CONSOLE,
+    HELL_EVENT_TYPE_STYLUS
 } Hell_EventType;
 
 typedef enum {
     HELL_EVENT_MASK_NONE_BIT    = 1 << 0,
     HELL_EVENT_MASK_KEY_BIT     = 1 << 1,
-    HELL_EVENT_MASK_MOUSE_BIT   = 1 << 2,
+    HELL_EVENT_MASK_POINTER_BIT = 1 << 2,
     HELL_EVENT_MASK_WINDOW_BIT  = 1 << 3,
     HELL_EVENT_MASK_CONSOLE_BIT = 1 << 4,
     HELL_EVENT_MASK_DEVICE_BIT  = 1 << 5,
@@ -119,6 +125,7 @@ void hell_PushMouseMotionEvent(Hell_EventQueue*, int16_t x, int16_t y,
 void hell_PushKeyDownEvent(Hell_EventQueue*, uint32_t keyCode, Hell_WindowID winid);
 void hell_PushKeyUpEvent(Hell_EventQueue*, uint32_t keyCode, Hell_WindowID winid);
 void hell_PushEmptyEvent(Hell_EventQueue*);
+void hell_PushStylusEvent(Hell_EventQueue* queue, float pressure, Hell_WindowID winid);
 
 uint16_t hell_GetWindowResizeWidth(const Hell_Event* event);
 uint16_t hell_GetWindowResizeHeight(const Hell_Event* event);

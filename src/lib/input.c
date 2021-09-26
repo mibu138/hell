@@ -350,12 +350,25 @@ hell_PushMouseDownEvent(Hell_EventQueue* queue, int16_t x, int16_t y,
 {
     Hell_Event ev = {
         .type = HELL_EVENT_TYPE_MOUSEDOWN,
-        .mask = HELL_EVENT_MASK_MOUSE_BIT,
+        .mask = HELL_EVENT_MASK_POINTER_BIT,
         .time = hell_Time(),
     };
     ev.data.winData.data.mouseData.x          = x;
     ev.data.winData.data.mouseData.y          = y;
     ev.data.winData.data.mouseData.buttonCode = buttonCode;
+    ev.data.winData.windowID = winid;
+    pushEvent(queue, ev);
+}
+
+void 
+hell_PushStylusEvent(Hell_EventQueue* queue, float pressure, Hell_WindowID winid)
+{
+    Hell_Event ev = {
+        .type = HELL_EVENT_TYPE_STYLUS,
+        .mask = HELL_EVENT_MASK_POINTER_BIT,
+        .time = hell_Time()
+    };
+    ev.data.winData.data.stylusData.pressure = pressure;
     ev.data.winData.windowID = winid;
     pushEvent(queue, ev);
 }
@@ -366,7 +379,7 @@ hell_PushMouseUpEvent(Hell_EventQueue* queue, int16_t x, int16_t y,
 {
     Hell_Event ev = {
         .type = HELL_EVENT_TYPE_MOUSEUP,
-        .mask = HELL_EVENT_MASK_MOUSE_BIT,
+        .mask = HELL_EVENT_MASK_POINTER_BIT,
         .time = hell_Time(),
     };
     ev.data.winData.data.mouseData.x          = x;
@@ -382,7 +395,7 @@ hell_PushMouseMotionEvent(Hell_EventQueue* queue, int16_t x, int16_t y,
 {
     Hell_Event ev = {
         .type = HELL_EVENT_TYPE_MOTION,
-        .mask = HELL_EVENT_MASK_MOUSE_BIT,
+        .mask = HELL_EVENT_MASK_POINTER_BIT,
         .time = hell_Time(),
     };
     ev.data.winData.data.mouseData.x          = x;

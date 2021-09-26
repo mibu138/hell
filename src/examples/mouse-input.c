@@ -37,8 +37,8 @@ int hellmain(void)
     Hell_Window* windows[2] = {window1, window2};
     hell_CreateHellmouth(grimoire, queue, console, 2, windows, userFrame, NULL, hellmouth);
 
-    hell_Subscribe(queue, HELL_EVENT_MASK_MOUSE_BIT | HELL_EVENT_MASK_WINDOW_BIT, 1, mouseEventHandler1, NULL);
-    hell_Subscribe(queue, HELL_EVENT_MASK_MOUSE_BIT | HELL_EVENT_MASK_WINDOW_BIT, 2, mouseEventHandler2, NULL);
+    hell_Subscribe(queue, HELL_EVENT_MASK_POINTER_BIT | HELL_EVENT_MASK_WINDOW_BIT, 1, mouseEventHandler1, NULL);
+    hell_Subscribe(queue, HELL_EVENT_MASK_POINTER_BIT | HELL_EVENT_MASK_WINDOW_BIT, 2, mouseEventHandler2, NULL);
 
     hell_Loop(hellmouth);
     return 0;
