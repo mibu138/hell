@@ -6,6 +6,11 @@ project(Hell LANGUAGES C VERSION 0.1.0)
 
 option(HELL_SKIP_EXAMPLES "Skip building hell examples" OFF)
 option(HELL_NO_WINDOW "Skip building hell window" OFF)
+option(HELL_XCB_DEBUG_MESSAGES "Turn on debug messages for xcb")
+
+if (${HELL_XCB_DEBUG_MESSAGES})
+    add_compile_definitions(HELL_XCB_DEBUG_MESSAGES)
+endif()
 
 if(WIN32)
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
