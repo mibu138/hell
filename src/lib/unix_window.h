@@ -14,6 +14,7 @@
 #include "private.h"
 #include "window.h"
 #include "common.h"
+#include "debug.h"
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
@@ -23,6 +24,14 @@
 #endif
 
 #define MAX_WIN_NAME 32
+
+#ifdef HELL_XCB_DEBUG_MESSAGES 
+#define DPRINT(fmt, ...) hell_DebugPrint("xcb", fmt, ##__VA_ARGS__)
+#else 
+#define DPRINT(fmt, ...) (void)0 
+#endif
+
+//typedef xcb_input_button_press_event_t input_device_event_t;
 
 typedef struct Hell_XcbWindow {
     xcb_connection_t*  connection;
@@ -193,10 +202,12 @@ inline static void drainXcbEventQueue(Hell_EventQueue* queue, Hell_Window* windo
     while ((xEvent = xcb_poll_for_event(xcbWindow->connection)))
     {
 start:
+        DPRINT("Response type: %d\n", xEvent->response_type);
         switch (XCB_EVENT_RESPONSE_TYPE(xEvent))
         {
             case XCB_KEY_PRESS: 
             {
+                DPRINT("key press\n");
                 uint32_t keyCode = getXcbKeyCode(xcbWindow->keysymbols, (xcb_key_press_event_t*)xEvent);
                 if (keyCode != 0)
                     hell_PushKeyDownEvent(queue, keyCode, window->id);
@@ -204,6 +215,7 @@ start:
             }
             case XCB_KEY_RELEASE: 
             {
+                DPRINT("key release %d\n", 5);
                 // bunch of extra stuff here dedicated to detecting autrepeats
                 // the idea is that if a key-release event is detected, followed
                 // by an immediate keypress of the same key, its an autorepeat.
