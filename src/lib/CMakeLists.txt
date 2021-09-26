@@ -23,7 +23,7 @@ target_include_directories(hellObj
     PRIVATE "../include/hell"
     INTERFACE "../include")
 if (UNIX)
-	target_link_libraries(hellObj INTERFACE xcb dl xcb-keysyms)
+	target_link_libraries(hellObj INTERFACE xcb dl xcb-keysyms xcb-xinput)
 elseif (WIN32)
 	target_link_libraries(hellObj INTERFACE)
 	set_target_properties(hell PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)

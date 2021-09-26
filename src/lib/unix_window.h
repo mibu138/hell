@@ -9,6 +9,7 @@
 #include <xcb/xproto.h>
 #include <X11/keysym.h>
 #include <xcb/xcb.h>
+#include <xcb/xinput.h>
 #include "evcodes.h"
 #include "input.h"
 #include "private.h"
@@ -23,6 +24,8 @@
 #endif
 
 #define MAX_WIN_NAME 32
+
+typedef xcb_input_button_press_event_t input_device_event_t;
 
 typedef struct Hell_XcbWindow {
     xcb_connection_t*  connection;
@@ -112,6 +115,87 @@ inline static Hell_ResizeEventData getXcbConfigureData(const xcb_generic_event_t
     return data;
 }
 
+struct fuck_xcb {
+    xcb_input_event_mask_t header;
+    uint32_t               mask;
+};
+
+static double 
+fixed3232ToDouble(xcb_input_fp3232_t input)
+{
+    return (double)input.integral + (double)input.frac / (1ULL << 32);
+}
+
+static struct StylusInfo {
+    xcb_atom_t label;
+    double     min;
+    double     max;
+    int        number;
+} stylusInfo;
+
+static void 
+setUpDevices(Hell_XcbWindow* w)
+{
+    xcb_input_xi_query_device_cookie_t cookie = xcb_input_xi_query_device(w->connection, XCB_INPUT_DEVICE_ALL);
+    xcb_input_xi_query_device_reply_t* reply = xcb_input_xi_query_device_reply(w->connection, cookie, NULL);
+    assert(reply);
+    xcb_input_xi_device_info_iterator_t iter = xcb_input_xi_query_device_infos_iterator(reply);
+    while (iter.rem)
+    {
+        xcb_input_xi_device_info_t* deviceInfo = iter.data;
+        const char* name = xcb_input_xi_device_info_name(deviceInfo);
+        switch (deviceInfo->type)
+        {
+            case XCB_INPUT_DEVICE_TYPE_MASTER_KEYBOARD: 
+                hell_Print("Found master keyboard: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
+                break;
+            case XCB_INPUT_DEVICE_TYPE_MASTER_POINTER: 
+                hell_Print("Found master pointer: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
+                break;
+            case XCB_INPUT_DEVICE_TYPE_SLAVE_KEYBOARD: 
+                hell_Print("Found slave keyboard: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
+                break;
+            case XCB_INPUT_DEVICE_TYPE_SLAVE_POINTER: 
+                {
+                hell_Print("Found slave pointer: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
+                xcb_input_device_class_iterator_t ci = xcb_input_xi_device_info_classes_iterator(deviceInfo);
+                while (ci.rem)
+                {
+                    xcb_input_device_class_t* classInfo = ci.data;
+                    switch (classInfo->type)
+                    {
+                        case XCB_INPUT_DEVICE_CLASS_TYPE_VALUATOR: 
+                        {
+                            xcb_input_valuator_class_t* vci = (xcb_input_valuator_class_t*)classInfo;
+                            hell_Print("VCI Label: %d\n", vci->label);
+                            xcb_get_atom_name_cookie_t atcookie = xcb_get_atom_name(w->connection, vci->label);
+                            xcb_get_atom_name_reply_t* atreply = xcb_get_atom_name_reply(w->connection, atcookie, NULL);
+                            if (atreply)
+                            {
+                                const char* atomname = xcb_get_atom_name_name(atreply);
+                                hell_Print("VCI Name: %s\n", atomname);
+                            }
+                            if (deviceInfo->deviceid == 28) // assume its stylus
+                            {
+                                stylusInfo.label  = vci->label;
+                                stylusInfo.min    = fixed3232ToDouble(vci->min);
+                                stylusInfo.max    = fixed3232ToDouble(vci->max);
+                                stylusInfo.number = vci->number;
+                                hell_Print("Stylus info: \n\tlabel: %d\n\tmin: %f\n\tmax: %f\n\tnumber: %d\n", 
+                                        stylusInfo.label, stylusInfo.min, stylusInfo.max, stylusInfo.number);
+                            }
+                            break;
+                        }
+                    }
+                    xcb_input_device_class_next(&ci);
+                }
+                break;
+                }
+        }
+        xcb_input_xi_device_info_next(&iter);
+    }
+}
+
 inline static void createXcbWindow(const uint16_t width, const uint16_t height, const char* name, Hell_Window* window)
 {
     window->typeSpecificData = hell_Malloc(sizeof(Hell_XcbWindow));
@@ -156,7 +240,8 @@ inline static void createXcbWindow(const uint16_t width, const uint16_t height, 
         XCB_EVENT_MASK_KEY_RELEASE |
 	//	XCB_EVENT_MASK_LEAVE_WINDOW |
 		XCB_EVENT_MASK_BUTTON_PRESS |
-		XCB_EVENT_MASK_BUTTON_RELEASE;
+		XCB_EVENT_MASK_BUTTON_RELEASE |
+        XCB_EVENT_MASK_PROPERTY_CHANGE;
 
     xcb_create_window(xcbWindow->connection, 
             XCB_COPY_FROM_PARENT,              // depth 
@@ -174,6 +259,40 @@ inline static void createXcbWindow(const uint16_t width, const uint16_t height, 
             xcbWindow->window, 
             XCB_ATOM_WM_NAME, 
             XCB_ATOM_STRING, 8, strlen(xcbWindow->name), xcbWindow->name);
+
+    uint32_t xiBitMask = 
+        XCB_INPUT_XI_EVENT_MASK_KEY_PRESS |
+        XCB_INPUT_XI_EVENT_MASK_KEY_RELEASE |
+        XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS |
+        XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE |
+        XCB_INPUT_XI_EVENT_MASK_MOTION;
+
+    struct fuck_xcb xiMask = {0};
+    xiMask.header.deviceid = XCB_INPUT_DEVICE_ALL;
+    xiMask.header.mask_len = 1;
+    xiMask.mask = xiBitMask;
+
+    // XCB/X11 has the absolute worst fucking API I've ever seen. Nothing is documented.
+    // Can only figure out how to use it by poring over the one or two projects in the wild 
+    // that actually bothered to write code for this garbage, and those projects must have 
+    // gotten some kind of support from the XCB devs because their headers ARE FUCKING INPENETRABLE. SHOVE YOUR TODOS UP YOUR ASS.
+    // Its a fucking shit show and should be burned off the face of the earth.
+    // Can't wait for wayland to take over and to never again deal with this fucking cunt of an API again.
+    xcb_void_cookie_t cookieA = xcb_input_xi_select_events_checked(xcbWindow->connection, xcbWindow->window, 1, &xiMask.header);
+    xcb_generic_error_t* error = xcb_request_check(xcbWindow->connection, cookieA);
+    if (error)
+    {
+        hell_Print("XCB ERROR\n");
+        exit(0);
+    }
+
+    setUpDevices(xcbWindow);
+
+    const char* pressureName = "Abs Pressure";
+    xcb_intern_atom_reply_t* reply;
+    xcb_intern_atom_cookie_t cookie = xcb_intern_atom(xcbWindow->connection, 1, strlen(pressureName), pressureName);
+    reply = xcb_intern_atom_reply(xcbWindow->connection, cookie, NULL);
+    hell_Print("Atom: %d\n", reply->atom);
 
     xcb_map_window(xcbWindow->connection, xcbWindow->window);
     xcb_flush(xcbWindow->connection);
