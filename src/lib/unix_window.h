@@ -376,8 +376,9 @@ inline static void handleStylusEvent(Hell_EventQueue* queue, Hell_Window* window
     DPRINT("Got event. Response type: %d\n", event->response_type);
     double pressure = 0.0;
     bool r = whatTheFuck(event, stylusPressureInfo.number, &pressure);
-    DPRINT("Result: %d Pressure: %f\n", r, pressure);
-    hell_PushStylusEvent(queue, pressure, window->id);
+    float normalizedPressure = pressure / stylusPressureInfo.max;
+    hell_PushStylusEvent(queue, normalizedPressure, window->id);
+    DPRINT("Result: %d Pressure: %f\n", r, normalizedPressure);
 }
 
 inline static void handleXInputEvent(Hell_EventQueue* queue, Hell_Window* window, input_device_event_t* event)
