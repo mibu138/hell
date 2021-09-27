@@ -315,7 +315,7 @@ hell_SolveInput(Hell_EventQueue* queue)
                 }
             }
         }
-        if (event->type == HELL_EVENT_MASK_CONSOLE_BIT)
+        if (event->type == HELL_EVENT_TYPE_CONSOLE)
         {
             hell_Free(event->data.conData.ptr);
         }

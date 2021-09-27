@@ -6,31 +6,31 @@
 #include "types.h"
 #include "evcodes.h"
 
-typedef struct {
+typedef struct Hell_MouseEventData {
     int16_t       x;
     int16_t       y;
     uint8_t       buttonCode;
 } Hell_MouseEventData;
 
-typedef struct {
+typedef struct Hell_StylusEventData {
     float         pressure;
 } Hell_StylusEventData;
 
-typedef struct {
+typedef struct Hell_ResizeEventData {
     uint16_t      width;
     uint16_t      height;
 } Hell_ResizeEventData;
 
-typedef struct {
+typedef struct Hell_ConsoleEventData {
     void*            ptr;
     uint32_t         ptrLen;
 } Hell_ConsoleEventData;
 
-typedef struct {
+typedef struct Hell_KeyEventData {
     uint32_t      keyCode;
 } Hell_KeyEventData;
 
-typedef union {
+typedef union Hell_InputData {
     Hell_MouseEventData   mouseData;
     Hell_StylusEventData  stylusData;
     Hell_ResizeEventData  resizeData;
@@ -38,23 +38,23 @@ typedef union {
 } Hell_InputData;
 
 // data that is captured via a window
-typedef struct {
+typedef struct Hell_WindowEventData {
     Hell_InputData data;
     Hell_WindowID  windowID;
 } Hell_WindowEventData;
 
 // data that is captured via a device directly
-typedef struct {
+typedef struct Hell_DeviceEventData {
     Hell_InputData data;
 } Hell_DeviceEventData;
 
-typedef union {
+typedef union Hell_EventData {
     Hell_WindowEventData  winData;
     Hell_DeviceEventData  devData;
     Hell_ConsoleEventData conData;
 } Hell_EventData;
 
-typedef enum {
+typedef enum Hell_EventType {
     HELL_EVENT_TYPE_NONE,
     HELL_EVENT_TYPE_KEYDOWN,
     HELL_EVENT_TYPE_KEYUP,
@@ -66,7 +66,7 @@ typedef enum {
     HELL_EVENT_TYPE_STYLUS
 } Hell_EventType;
 
-typedef enum {
+typedef enum Hell_EventMaskBits {
     HELL_EVENT_MASK_NONE_BIT    = 1 << 0,
     HELL_EVENT_MASK_KEY_BIT     = 1 << 1,
     HELL_EVENT_MASK_POINTER_BIT = 1 << 2,

@@ -12,6 +12,14 @@ if (${HELL_XCB_DEBUG_MESSAGES})
     add_compile_definitions(HELL_XCB_DEBUG_MESSAGES)
 endif()
 
+if (MSVC)
+    # warning level 4 and all warnings as errors
+    add_compile_options(/W4 /WX)
+else()
+    # lots of warnings and all warnings as errors
+    add_compile_options(-Wall -Wno-missing-braces)
+endif()
+
 if(WIN32)
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
