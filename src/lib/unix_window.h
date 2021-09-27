@@ -208,6 +208,7 @@ setUpDevices(Hell_XcbWindow* w)
                                 hell_Print("Stylus info: \n\tlabel: %d\n\tmin: %f\n\tmax: %f\n\tnumber: %d\n", 
                                         stylusPressureInfo.label, stylusPressureInfo.min, stylusPressureInfo.max, stylusPressureInfo.number);
                             }
+                            free(atreply);
                             break;
                         }
                     }
@@ -218,6 +219,7 @@ setUpDevices(Hell_XcbWindow* w)
         }
         xcb_input_xi_device_info_next(&iter);
     }
+    free(reply);
 }
 
 struct fuck_xcb {
@@ -330,6 +332,7 @@ inline static void createXcbWindow(const uint16_t width, const uint16_t height, 
     window->height           = height;
     window->type             = HELL_WINDOW_XCB_TYPE;
 
+    free(reply);
     setUpDevices(xcbWindow);
 }
 
