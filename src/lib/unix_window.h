@@ -145,7 +145,7 @@ fixed3232ToDouble(xcb_input_fp3232_t input)
     return (double)input.integral + (double)input.frac / (1ULL << 32);
 }
 
-static int        stylusDeviceId;
+static int        stylusDeviceId = -1;
 static xcb_atom_t pressureAtom;
 
 static struct StylusPressureInfo {
@@ -294,9 +294,7 @@ inline static void createXcbWindow(const uint16_t width, const uint16_t height, 
     uint32_t xiBitMask = 
         XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS |
         XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE |
-        XCB_INPUT_XI_EVENT_MASK_MOTION | 
-        XCB_INPUT_XI_EVENT_MASK_ENTER |
-        XCB_INPUT_XI_EVENT_MASK_LEAVE;
+        XCB_INPUT_XI_EVENT_MASK_MOTION;
 
     struct fuck_xcb xiMask = {0};
     xiMask.header.deviceid = XCB_INPUT_DEVICE_ALL;
@@ -404,6 +402,7 @@ inline static void handleXInputEvent(Hell_EventQueue* queue, Hell_Window* window
         hell_PushMouseUpEvent(queue, data.x, data.y, data.buttonCode, window->id);
         break;
     case XCB_MOTION_NOTIFY:
+        DPRINT("motion notify\n");
         data = getXInputMouseData(event);
         DPRINT("Mouse event data:\n\t x: %d y: %d\n", data.x, data.y);
         hell_PushMouseMotionEvent(queue, data.x, data.y, data.buttonCode, window->id);
@@ -412,7 +411,9 @@ inline static void handleXInputEvent(Hell_EventQueue* queue, Hell_Window* window
         break;
     }
     if (event->sourceid == stylusDeviceId)
+    {
         handleStylusEvent(queue, window, event);
+    }
 }
 
 inline static void drainXcbEventQueue(Hell_EventQueue* queue, Hell_Window* window)
