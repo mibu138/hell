@@ -390,23 +390,29 @@ inline static void handleXInputEvent(Hell_EventQueue* queue, Hell_Window* window
     switch (event->event_type)
     {
     case XCB_BUTTON_PRESS:
+        {
         DPRINT("button press\n");
         Hell_MouseEventData data = getXInputMouseData(event);
         DPRINT("Mouse event data:\n\t x: %d y: %d button: %d\n", data.x, data.y, data.buttonCode);
         hell_PushMouseDownEvent(queue, data.x, data.y, data.buttonCode, window->id);
         break;
+        }
     case XCB_BUTTON_RELEASE:
+        {
         DPRINT("button release\n");
-        data = getXInputMouseData(event);
+        Hell_MouseEventData data = getXInputMouseData(event);
         DPRINT("Mouse event data:\n\t x: %d y: %d, button: %d\n", data.x, data.y, data.buttonCode);
         hell_PushMouseUpEvent(queue, data.x, data.y, data.buttonCode, window->id);
         break;
+        }
     case XCB_MOTION_NOTIFY:
+        {
         DPRINT("motion notify\n");
-        data = getXInputMouseData(event);
+        Hell_MouseEventData data = getXInputMouseData(event);
         DPRINT("Mouse event data:\n\t x: %d y: %d\n", data.x, data.y);
         hell_PushMouseMotionEvent(queue, data.x, data.y, data.buttonCode, window->id);
         break;
+        }
     default: 
         break;
     }
