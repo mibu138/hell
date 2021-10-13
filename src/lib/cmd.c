@@ -43,7 +43,7 @@ typedef struct Hell_Grimoire {
 // so we can rename the struct without having to change the signatures
 typedef Hell_Grimoire Grim;
 
-static void cmdListFn(const Hell_Grimoire* grim, void* data)
+static void cmdListFn(Hell_Grimoire* grim, void* data)
 {
     // could filter based on 2nd argument at some point
     // char* match = NULL;
@@ -54,14 +54,14 @@ static void cmdListFn(const Hell_Grimoire* grim, void* data)
         hell_Print("%s\n", cmd->name);
 }
 
-static void cmdEchoFn(const Hell_Grimoire* grim, void* data)
+static void cmdEchoFn(Hell_Grimoire* grim, void* data)
 {
 	for (int i=1 ; i<grim->cmdArgc ; i++)
 		hell_Print("%s ", grim->cmdArgv[i]);
 	hell_Print("\n");
 }
 
-static void varListFn(const Hell_Grimoire* grim, void* data)
+static void varListFn(Hell_Grimoire* grim, void* data)
 {
     for (Var* var = grim->variables; var; var = var->next)
     {
@@ -69,7 +69,7 @@ static void varListFn(const Hell_Grimoire* grim, void* data)
     }
 }
 
-static void varSetFn(const Hell_Grimoire* grim, void* data)
+static void varSetFn(Hell_Grimoire* grim, void* data)
 {
 }
 
@@ -202,6 +202,25 @@ void hell_AddCommand(Hell_Grimoire* grim, const char* cmdName, Hell_CmdFn functi
         pos = &(*pos)->next;
     cmd->next = *pos;
     *pos = cmd;
+}
+
+void hell_RemoveCommand(Hell_Grimoire* grim, const char* cmdName)
+{
+    assert(strnlen(cmdName, MAX_CMD_NAME_LEN) < MAX_CMD_NAME_LEN);
+    Cmd *cmd, *prev;
+    cmd = grim->commands;
+    prev = NULL;
+    while (cmd)
+    {
+        if (strncmp(cmdName, cmd->name, MAX_CMD_NAME_LEN) == 0)
+        {
+            prev->next = cmd->next;
+            hell_Free(cmd);
+            return;
+        }
+        prev = cmd;
+        cmd = cmd->next;
+    }
 }
 
 void hell_AddCommand2(Hell_Grimoire* grim, const char* cmdName, Hell_CmdFn function, void* data, uint32_t dataSize)
