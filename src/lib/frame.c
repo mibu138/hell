@@ -98,7 +98,7 @@ void hell_DestroyHellmouth(Hell_Hellmouth* h)
 }
 
 // if we're going to call exit it doesn't make sense to have anyshut down code run.
-void hell_Quit(const Hell_Grimoire* grim, void* hellmouthvoid)
+void hell_Quit(Hell_Grimoire* grim, void* hellmouthvoid)
 {
     Hell_Hellmouth* hellmouth = (Hell_Hellmouth*)hellmouthvoid;
     if (hellmouth->userShutDown)

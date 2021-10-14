@@ -61,7 +61,7 @@ void hell_Frame(Hell_Hellmouth*, Hell_Tick dt); // run single frame
 void hell_ShutDown(void);
 
 // calls shutdown and exits the program
-void hell_Quit(const Hell_Grimoire* grim, void* hellmouthvoid);
+void hell_Quit(Hell_Grimoire* grim, void* hellmouthvoid);
 
 uint64_t hell_SizeOfGrimoire(void);
 uint64_t hell_SizeOfConsole(void);
