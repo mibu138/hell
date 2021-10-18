@@ -15,7 +15,7 @@
 
 typedef Hell_C_Var Var;
 
-static void dummyUserFrame(void)
+static void dummyUserFrame(u64 fi, u64 dt)
 {
     // no op we call in case user frame is not provided
     // may be an optimization? gets rid of an if statement in the loop
@@ -30,6 +30,7 @@ typedef struct Hell_Hellmouth {
     uint32_t         windowCount;
     Hell_FrameFn     userFrame;
     Hell_ShutDownFn  userShutDown;
+    u64              frameCount;
 } Hell_Hellmouth;
 
 void
@@ -79,8 +80,9 @@ void hell_Loop(Hell_Hellmouth* h)
         hell_Sleep(targetFrameLength);
         endTick = hell_Time();
         hell_Frame(h, endTick - startTick);
-        h->userFrame();
+        h->userFrame(h->frameCount, endTick - startTick);
         startTick = endTick;
+        h->frameCount++;
     }
 }
 

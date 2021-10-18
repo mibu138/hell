@@ -13,7 +13,7 @@ typedef enum { HELL_ERR_FATAL, HELL_ERR_MILD } Hell_ErrorCode;
 typedef struct Hell_Window    Hell_Window;
 typedef struct Hell_Hellmouth Hell_Hellmouth;
 
-typedef void (*Hell_FrameFn)(void);
+typedef void (*Hell_FrameFn)(u64 frameNumber, u64 dt /*microseconds*/);
 typedef void (*Hell_ShutDownFn)(void);
 
 void hell_Print(const char* fmt, ...);
