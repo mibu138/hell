@@ -31,6 +31,8 @@ char* hell_CopyString(const char* in);
 
 // returns time since epoch in microseconds
 Hell_Tick hell_Time(void);
+
+// return a smallest integer greater than or equal to quantity that satisfies alignment
 uint64_t  hell_Align(const uint64_t quantity, const uint32_t alignment);
 void      hell_BitPrint(const void* const thing, const uint32_t bitcount);
 void      hell_BytePrint(const void* const thing, const uint32_t byteCount);
