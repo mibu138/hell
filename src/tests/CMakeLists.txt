@@ -1,0 +1,7 @@
+file(GLOB exe_srcs CONFIGURE_DEPENDS exe*.c)
+foreach(src ${exe_srcs})
+    get_filename_component(name ${src} NAME_WLE)
+    add_executable(${name} ${src})
+    target_link_libraries(${name} Hell::Hell)
+    add_test(NAME "test-${name}" COMMAND ${name})
+endforeach()
