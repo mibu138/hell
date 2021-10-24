@@ -5,6 +5,7 @@ set(CMAKE_C_STANDARD 11)
 project(Hell LANGUAGES C VERSION 0.1.0)
 
 option(HELL_SKIP_EXAMPLES "Skip building hell examples" OFF)
+option(HELL_SKIP_TESTS "Skip building hell tests" OFF)
 option(HELL_NO_WINDOW "Skip building hell window" OFF)
 option(HELL_XCB_DEBUG_MESSAGES "Turn on debug messages for xcb")
 
@@ -32,3 +33,7 @@ endif()
 
 add_subdirectory(src/lib)
 add_subdirectory(src/examples)
+if (NOT HELL_SKIP_TESTS)
+    enable_testing()
+    add_subdirectory(src/tests)
+endif()

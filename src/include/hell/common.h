@@ -16,6 +16,18 @@ typedef struct Hell_Hellmouth Hell_Hellmouth;
 typedef void (*Hell_FrameFn)(u64 frameNumber, u64 dt /*microseconds*/);
 typedef void (*Hell_ShutDownFn)(void);
 
+typedef struct Hell_Window    Hell_Window;
+typedef struct Hell_Hellmouth {
+    Hell_Grimoire*   grimoire;
+    Hell_EventQueue* eventqueue;
+    Hell_Console*    console;
+    Hell_Window**    windows;
+    uint32_t         windowCount;
+    Hell_FrameFn     userFrame;
+    Hell_ShutDownFn  userShutDown;
+    u64              frameCount;
+} Hell_Hellmouth;
+
 void hell_Print(const char* fmt, ...);
 void hell_Print_Vec3(const float[3]);
 void hell_Print_Mat4(const float[4][4]);
@@ -39,7 +51,12 @@ void      hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue,
                                Hell_Window* windows[],
                                Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown,
                                Hell_Hellmouth* hellmouth);
+// abreviated hellmouth creation that allocs and creates everythin
+Hell_Hellmouth* hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown);
+void hell_CloseHellmouth(Hell_Hellmouth* hellmouth);
 
+Hell_Window* hell_HellmouthAddWindow(Hell_Hellmouth* hm, u16 w, u16 h, const char* name);
+void hell_Exit(int code);
 // sleep for s seconds
 void hell_Sleep(double s);
 
@@ -61,7 +78,7 @@ void hell_Frame(Hell_Hellmouth*, Hell_Tick dt); // run single frame
 void hell_ShutDown(void);
 
 // calls shutdown and exits the program
-void hell_Quit(const Hell_Grimoire* grim, void* hellmouthvoid);
+void hell_Quit(Hell_Grimoire* grim, void* hellmouthvoid);
 
 uint64_t hell_SizeOfGrimoire(void);
 uint64_t hell_SizeOfConsole(void);

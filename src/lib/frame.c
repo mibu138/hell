@@ -22,17 +22,6 @@ static void dummyUserFrame(u64 fi, u64 dt)
     // because we always call something
 }
 
-typedef struct Hell_Hellmouth {
-    Hell_Grimoire*   grimoire;
-    Hell_EventQueue* eventqueue;
-    Hell_Console*    console;
-    Hell_Window**    windows;
-    uint32_t         windowCount;
-    Hell_FrameFn     userFrame;
-    Hell_ShutDownFn  userShutDown;
-    u64              frameCount;
-} Hell_Hellmouth;
-
 void
 hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Console* console,
                      uint32_t windowCount, Hell_Window* windows[],
@@ -57,6 +46,41 @@ hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Conso
     if (!dedicated->value)
         cl_Init();
     hell_Announce("Hellmouth created.\n");
+}
+
+Hell_Hellmouth*
+hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown)
+{
+    Hell_Hellmouth* hm = hell_AllocHellmouth();
+    memset(hm, 0, sizeof(*hm));
+    hm->eventqueue = hell_AllocEventQueue();
+    hm->grimoire   = hell_AllocGrimoire();
+    hm->console    = hell_AllocConsole();
+    hm->userShutDown = userShutDown;
+    hm->userFrame  = userFrame ? userFrame : dummyUserFrame;
+
+    hell_CreateEventQueue(hm->eventqueue);
+    hell_CreateConsole(hm->console);
+    hell_CreateGrimoire(hm->eventqueue, hm->grimoire);
+
+    hell_AddCommand(hm->grimoire, "quit", hell_Quit, hm);
+    const Hell_C_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", "0", 0);
+    sv_Init();
+    if (!dedicated->value)
+        cl_Init();
+    hell_Announce("Hellmouth created.\n");
+    return hm;
+}
+
+Hell_Window*
+hell_HellmouthAddWindow(Hell_Hellmouth* hm, u16 w, u16 h, const char* name)
+{
+    const u32 i = hm->windowCount++;
+    // note realloc behaves as malloc if hm->windows == 0
+    hm->windows = hell_Realloc(hm->windows, hm->windowCount * sizeof(Hell_Window*));
+    hm->windows[i] = hell_AllocWindow();
+    hell_CreateWindow(hm->eventqueue, w, h, name, hm->windows[i]);
+    return hm->windows[i];
 }
 
 void hell_Frame(Hell_Hellmouth* h, Tick delta)
@@ -100,13 +124,25 @@ void hell_DestroyHellmouth(Hell_Hellmouth* h)
 }
 
 // if we're going to call exit it doesn't make sense to have anyshut down code run.
-void hell_Quit(const Hell_Grimoire* grim, void* hellmouthvoid)
+void hell_Quit(Hell_Grimoire* grim, void* hellmouthvoid)
 {
     Hell_Hellmouth* hellmouth = (Hell_Hellmouth*)hellmouthvoid;
     if (hellmouth->userShutDown)
         hellmouth->userShutDown();
     hell_DestroyHellmouth(hellmouth);
     exit(0);
+}
+
+void hell_Exit(int code)
+{
+    exit(code);
+}
+
+void hell_CloseHellmouth(Hell_Hellmouth* hellmouth)
+{
+    if (hellmouth->userShutDown)
+        hellmouth->userShutDown();
+    hell_DestroyHellmouth(hellmouth);
 }
 
 uint64_t hell_SizeOfHellmouth(void)

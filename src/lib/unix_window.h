@@ -2,6 +2,7 @@
 #define HELL_UNIX_WINDOW_H
 
 #include "platform.h"
+#include "attributes.h"
 #ifdef UNIX
 #include "xcb_window_type.h"
 #include <xcb/xcb_keysyms.h>
@@ -169,17 +170,17 @@ setUpDevices(Hell_XcbWindow* w)
         switch (deviceInfo->type)
         {
             case XCB_INPUT_DEVICE_TYPE_MASTER_KEYBOARD: 
-                hell_Print("Found master keyboard: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
+                DPRINT("Found master keyboard: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
                 break;
             case XCB_INPUT_DEVICE_TYPE_MASTER_POINTER: 
-                hell_Print("Found master pointer: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
+                DPRINT("Found master pointer: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
                 break;
             case XCB_INPUT_DEVICE_TYPE_SLAVE_KEYBOARD: 
-                hell_Print("Found slave keyboard: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
+                DPRINT("Found slave keyboard: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
                 break;
             case XCB_INPUT_DEVICE_TYPE_SLAVE_POINTER: 
                 {
-                hell_Print("Found slave pointer: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
+                DPRINT("Found slave pointer: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
                 bool isStylus = (strcmp(name, "Wacom Intuos Pro S Pen stylus") == 0); //TODO figure out a better way to check
                 if (isStylus) stylusDeviceId = deviceInfo->deviceid;
                 xcb_input_device_class_iterator_t ci = xcb_input_xi_device_info_classes_iterator(deviceInfo);
@@ -191,13 +192,13 @@ setUpDevices(Hell_XcbWindow* w)
                         case XCB_INPUT_DEVICE_CLASS_TYPE_VALUATOR: 
                         {
                             xcb_input_valuator_class_t* vci = (xcb_input_valuator_class_t*)classInfo;
-                            hell_Print("VCI Label: %d\n", vci->label);
+                            DPRINT("VCI Label: %d\n", vci->label);
                             xcb_get_atom_name_cookie_t atcookie = xcb_get_atom_name(w->connection, vci->label);
                             xcb_get_atom_name_reply_t* atreply = xcb_get_atom_name_reply(w->connection, atcookie, NULL);
                             if (atreply)
                             {
-                                const char* atomname = xcb_get_atom_name_name(atreply);
-                                hell_Print("VCI Name: %s\n", atomname);
+                                HELL_UNUSED const char* atomname = xcb_get_atom_name_name(atreply);
+                                DPRINT("VCI Name: %s\n", atomname);
                             }
                             if (isStylus && vci->label == pressureAtom)
                             {
@@ -205,7 +206,7 @@ setUpDevices(Hell_XcbWindow* w)
                                 stylusPressureInfo.min    = fixed3232ToDouble(vci->min);
                                 stylusPressureInfo.max    = fixed3232ToDouble(vci->max);
                                 stylusPressureInfo.number = vci->number;
-                                hell_Print("Stylus info: \n\tlabel: %d\n\tmin: %f\n\tmax: %f\n\tnumber: %d\n", 
+                                DPRINT("Stylus info: \n\tlabel: %d\n\tmin: %f\n\tmax: %f\n\tnumber: %d\n", 
                                         stylusPressureInfo.label, stylusPressureInfo.min, stylusPressureInfo.max, stylusPressureInfo.number);
                             }
                             free(atreply);
@@ -356,7 +357,7 @@ static int xi2ValuatorOffset(const unsigned char *maskPtr, int maskLen, int numb
 // "inspired" from qt because the xcb devs don't document fucking shit. this is insane and 
 // i haven't the foggiest fuck what is going on.
 // TODO re-write this once I learn what fuck is happening here.
-inline static bool whatTheFuck(const void* event, int valuatorNum, double *value)
+inline static bool magic(const void* event, int valuatorNum, double *value)
 {
     const input_device_event_t* xideviceevent = (const input_device_event_t *)event;
     const unsigned char* buttonsMaskAddr = (const unsigned char *)(&xideviceevent[1]);
@@ -376,7 +377,7 @@ inline static void handleStylusEvent(Hell_EventQueue* queue, Hell_Window* window
 {
     DPRINT("Got event. Response type: %d\n", event->response_type);
     double pressure = 0.0;
-    bool r = whatTheFuck(event, stylusPressureInfo.number, &pressure);
+    magic(event, stylusPressureInfo.number, &pressure);
     float normalizedPressure = pressure / stylusPressureInfo.max;
     hell_PushStylusEvent(queue, normalizedPressure, window->id);
     DPRINT("Result: %d Pressure: %f\n", r, normalizedPressure);
@@ -390,23 +391,29 @@ inline static void handleXInputEvent(Hell_EventQueue* queue, Hell_Window* window
     switch (event->event_type)
     {
     case XCB_BUTTON_PRESS:
+        {
         DPRINT("button press\n");
         Hell_MouseEventData data = getXInputMouseData(event);
         DPRINT("Mouse event data:\n\t x: %d y: %d button: %d\n", data.x, data.y, data.buttonCode);
         hell_PushMouseDownEvent(queue, data.x, data.y, data.buttonCode, window->id);
         break;
+        }
     case XCB_BUTTON_RELEASE:
+        {
         DPRINT("button release\n");
-        data = getXInputMouseData(event);
+        Hell_MouseEventData data = getXInputMouseData(event);
         DPRINT("Mouse event data:\n\t x: %d y: %d, button: %d\n", data.x, data.y, data.buttonCode);
         hell_PushMouseUpEvent(queue, data.x, data.y, data.buttonCode, window->id);
         break;
+        }
     case XCB_MOTION_NOTIFY:
+        {
         DPRINT("motion notify\n");
-        data = getXInputMouseData(event);
+        Hell_MouseEventData data = getXInputMouseData(event);
         DPRINT("Mouse event data:\n\t x: %d y: %d\n", data.x, data.y);
         hell_PushMouseMotionEvent(queue, data.x, data.y, data.buttonCode, window->id);
         break;
+        }
     default: 
         break;
     }
