@@ -4,7 +4,7 @@
 
 Hell_Hellmouth* hm;
 
-void frame(void)
+void frame(u64 fn, u64 dt)
 {
     Hell_Tick t = hell_Time();
     hell_Print("T: %d\n", t);
