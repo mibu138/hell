@@ -48,11 +48,9 @@ hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Conso
     hell_Announce("Hellmouth created.\n");
 }
 
-Hell_Hellmouth*
-hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown)
+int
+hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Hellmouth* hm)
 {
-    Hell_Hellmouth* hm = hell_AllocHellmouth();
-    memset(hm, 0, sizeof(*hm));
     hm->eventqueue = hell_AllocEventQueue();
     hm->grimoire   = hell_AllocGrimoire();
     hm->console    = hell_AllocConsole();
@@ -69,7 +67,7 @@ hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown)
     if (!dedicated->value)
         cl_Init();
     hell_Announce("Hellmouth created.\n");
-    return hm;
+    return 0;
 }
 
 Hell_Window*

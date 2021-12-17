@@ -1,6 +1,6 @@
 #include <hell/hell.h>
 
-Hell_Hellmouth* hm;
+Hell_Hellmouth hm;
 
 void frame(u64 fn, u64 dt)
 {
@@ -9,13 +9,13 @@ void frame(u64 fn, u64 dt)
     if (t > 500000)
     {
         hell_Print("Ending");
-        hell_CloseHellmouth(hm);
+        hell_CloseHellmouth(&hm);
         hell_Exit(0);
     }
 }
 
 int main(int argc, char *argv[])
 {
-    hm = hell_OpenHellmouth(frame, NULL);
-    hell_Loop(hm);
+    hell_OpenHellmouth(frame, NULL, &hm);
+    hell_Loop(&hm);
 }
