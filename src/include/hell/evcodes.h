@@ -41,6 +41,8 @@
 #define HELL_KEY_7    55
 #define HELL_KEY_8    56
 #define HELL_KEY_9    57
+#define HELL_KEY_DELETE 127
+#define HELL_KEY_ENTER 13 
 
 #define HELL_MOUSE_LEFT  1
 #define HELL_MOUSE_RIGHT 2

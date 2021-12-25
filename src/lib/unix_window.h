@@ -88,6 +88,8 @@ inline static uint32_t getXcbKeyCode(xcb_key_symbols_t* keysymbols, const xcb_ke
         case XK_space:     keyCode = HELL_KEY_SPACE; break;
         case XK_Control_L: keyCode = HELL_KEY_CTRL; break;
         case XK_Escape:    keyCode = HELL_KEY_ESC; break;
+        case XK_Delete:    keyCode = HELL_KEY_DELETE; break;
+        case XK_Return:    keyCode = HELL_KEY_ENTER; break;
         default: keyCode = 0; break;
     }
     return keyCode;

@@ -121,7 +121,6 @@ void hell_DestroyHellmouth(Hell_Hellmouth* h)
     hell_ShutdownLogger();
 }
 
-// if we're going to call exit it doesn't make sense to have anyshut down code run.
 void hell_Quit(Hell_Grimoire* grim, void* hellmouthvoid)
 {
     Hell_Hellmouth* hellmouth = (Hell_Hellmouth*)hellmouthvoid;
@@ -141,6 +140,12 @@ void hell_CloseHellmouth(Hell_Hellmouth* hellmouth)
     if (hellmouth->userShutDown)
         hellmouth->userShutDown();
     hell_DestroyHellmouth(hellmouth);
+}
+
+void hell_CloseAndExit(Hell_Hellmouth* hm)
+{
+    hell_CloseHellmouth(hm);
+    hell_Exit(0);
 }
 
 uint64_t hell_SizeOfHellmouth(void)
