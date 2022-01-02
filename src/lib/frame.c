@@ -15,7 +15,7 @@
 
 typedef Hell_C_Var Var;
 
-static void dummyUserFrame(void)
+static void dummyUserFrame(u64 fi, u64 dt)
 {
     // no op we call in case user frame is not provided
     // may be an optimization? gets rid of an if statement in the loop
@@ -48,11 +48,9 @@ hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Conso
     hell_Announce("Hellmouth created.\n");
 }
 
-Hell_Hellmouth*
-hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown)
+int
+hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Hellmouth* hm)
 {
-    Hell_Hellmouth* hm = hell_AllocHellmouth();
-    memset(hm, 0, sizeof(*hm));
     hm->eventqueue = hell_AllocEventQueue();
     hm->grimoire   = hell_AllocGrimoire();
     hm->console    = hell_AllocConsole();
@@ -69,7 +67,7 @@ hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown)
     if (!dedicated->value)
         cl_Init();
     hell_Announce("Hellmouth created.\n");
-    return hm;
+    return 0;
 }
 
 Hell_Window*
@@ -104,8 +102,9 @@ void hell_Loop(Hell_Hellmouth* h)
         hell_Sleep(targetFrameLength);
         endTick = hell_Time();
         hell_Frame(h, endTick - startTick);
-        h->userFrame();
+        h->userFrame(h->frameCount, endTick - startTick);
         startTick = endTick;
+        h->frameCount++;
     }
 }
 
@@ -122,7 +121,6 @@ void hell_DestroyHellmouth(Hell_Hellmouth* h)
     hell_ShutdownLogger();
 }
 
-// if we're going to call exit it doesn't make sense to have anyshut down code run.
 void hell_Quit(Hell_Grimoire* grim, void* hellmouthvoid)
 {
     Hell_Hellmouth* hellmouth = (Hell_Hellmouth*)hellmouthvoid;
@@ -142,6 +140,12 @@ void hell_CloseHellmouth(Hell_Hellmouth* hellmouth)
     if (hellmouth->userShutDown)
         hellmouth->userShutDown();
     hell_DestroyHellmouth(hellmouth);
+}
+
+void hell_CloseAndExit(Hell_Hellmouth* hm)
+{
+    hell_CloseHellmouth(hm);
+    hell_Exit(0);
 }
 
 uint64_t hell_SizeOfHellmouth(void)

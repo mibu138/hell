@@ -15,7 +15,7 @@ bool mouseEventHandler2(const Hell_Event* event, void* data)
 Hell_Window* window1;
 Hell_Window* window2;
 
-static void userFrame(void)
+static void userFrame(u64 fn, u64 dt)
 {
     hell_Print("window1 :: w: %d h: %d\n", hell_GetWindowWidth(window1), hell_GetWindowHeight(window1));
     hell_Print("window2 :: w: %d h: %d\n", hell_GetWindowWidth(window2), hell_GetWindowHeight(window2));

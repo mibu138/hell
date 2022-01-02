@@ -10,7 +10,10 @@
 
 typedef enum { HELL_ERR_FATAL, HELL_ERR_MILD } Hell_ErrorCode;
 
-typedef void (*Hell_FrameFn)(void);
+typedef struct Hell_Window    Hell_Window;
+typedef struct Hell_Hellmouth Hell_Hellmouth;
+
+typedef void (*Hell_FrameFn)(u64 frameNumber, u64 dt /*microseconds*/);
 typedef void (*Hell_ShutDownFn)(void);
 
 typedef struct Hell_Window    Hell_Window;
@@ -22,6 +25,7 @@ typedef struct Hell_Hellmouth {
     uint32_t         windowCount;
     Hell_FrameFn     userFrame;
     Hell_ShutDownFn  userShutDown;
+    u64              frameCount;
 } Hell_Hellmouth;
 
 void hell_Print(const char* fmt, ...);
@@ -50,8 +54,10 @@ void      hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue,
                                Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown,
                                Hell_Hellmouth* hellmouth);
 // abreviated hellmouth creation that allocs and creates everythin
-Hell_Hellmouth* hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown);
+// returns 0 as success
+int  hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Hellmouth* hm);
 void hell_CloseHellmouth(Hell_Hellmouth* hellmouth);
+void hell_CloseAndExit(Hell_Hellmouth*);
 
 Hell_Window* hell_HellmouthAddWindow(Hell_Hellmouth* hm, u16 w, u16 h, const char* name);
 void hell_Exit(int code);

@@ -322,6 +322,18 @@ hell_SolveInput(Hell_EventQueue* queue)
     }
 }
 
+// not used yet... issue is we still have hell itself processing some events,
+// especially console ones, which need additional freeing.
+// so we dont want to give the client full access to the queue
+const Hell_Event* hell_PullEvent(Hell_EventQueue* queue)
+{
+    Hell_Event* event = NULL;
+    if (queue->tail != queue->head)
+    {
+    }
+    return event;
+}
+
 void
 hell_Subscribe(Hell_EventQueue* queue, Hell_EventMask mask, Hell_WindowID winid, Hell_SubscriberFn func,
                            void* data)
