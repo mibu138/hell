@@ -56,6 +56,7 @@ void      hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue,
 // abreviated hellmouth creation that allocs and creates everythin
 // returns 0 as success
 int  hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Hellmouth* hm);
+int hell_OpenHellmouth_NoConsole(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Hellmouth* hm);
 void hell_CloseHellmouth(Hell_Hellmouth* hellmouth);
 void hell_CloseAndExit(Hell_Hellmouth*);
 

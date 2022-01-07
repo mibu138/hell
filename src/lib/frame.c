@@ -70,6 +70,27 @@ hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_He
     return 0;
 }
 
+int
+hell_OpenHellmouth_NoConsole(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Hellmouth* hm)
+{
+    hm->eventqueue = hell_AllocEventQueue();
+    hm->grimoire   = hell_AllocGrimoire();
+    hm->console    = NULL;
+    hm->userShutDown = userShutDown;
+    hm->userFrame  = userFrame ? userFrame : dummyUserFrame;
+
+    hell_CreateEventQueue(hm->eventqueue);
+    hell_CreateGrimoire(hm->eventqueue, hm->grimoire);
+
+    hell_AddCommand(hm->grimoire, "quit", hell_Quit, hm);
+    const Hell_C_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", "0", 0);
+    sv_Init();
+    if (!dedicated->value)
+        cl_Init();
+    hell_Announce("Hellmouth created.\n");
+    return 0;
+}
+
 Hell_Window*
 hell_HellmouthAddWindow(Hell_Hellmouth* hm, u16 w, u16 h, const char* name)
 {
