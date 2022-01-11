@@ -15,12 +15,6 @@ typedef struct Hell_Stack {
     void*         elems;
 } Hell_Array;
 
-typedef struct Hell_Array {
-    u32   count;
-    u32   elemSize;
-    void* elems;
-} Hell_Array;
-
 // if userAlloc or userRealloc is null will default to Hell_Malloc or Hell_Realloc
 void  hell_CreateArray(u32 capacity, u32 elemSize, HellAllocFn userAlloc, HellReallocFn userRealloc, Hell_Array* stack);
 void  hell_ArrayPush(Hell_Array*, void* elem);
@@ -28,7 +22,5 @@ void  hell_ArrayPop(Hell_Array*, void* target);
 // if userAlloc is null will default to Hell_Free
 void  hell_DestroyArray(Hell_Array*, HellFreeFn userFree);
 
-// array stuff in progress...
-void hell_CreateArray(u32 count, u32 elemSize, HellAllocFn userAllocFn, Hell_Array* array);
 
 #endif /* end of include guard: HELL_DS_H */
