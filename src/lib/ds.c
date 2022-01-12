@@ -24,27 +24,27 @@ static void* arrayLastElemPtr(Hell_Array* stack)
 }
 
 // if userAlloc is null will default to Hell_Malloc
-void  hell_CreateArray(u32 capacity, u32 elemSize, HellAllocFn userAlloc, HellReallocFn userRealloc, Hell_Array* stack)
+void  hell_CreateArray(u32 capacity, u32 elemSize, HellAllocFn userAlloc, HellReallocFn userRealloc, Hell_Array* array)
 {
-    assert(stack);
+    assert(array);
     assert(capacity > 0);
     assert(elemSize > 0);
-    memset(stack, 0, sizeof(*stack));
-    stack->capacity = capacity;
-    stack->elemSize = elemSize;
+    memset(array, 0, sizeof(*array));
+    array->capacity = capacity;
+    array->elemSize = elemSize;
     if (userRealloc)
-        stack->reallocFn = userRealloc;
+        array->reallocFn = userRealloc;
     else 
-        stack->reallocFn = hell_Realloc;
+        array->reallocFn = hell_Realloc;
     if (userAlloc) 
-        stack->elems = userAlloc(capacity * elemSize);
+        array->elems = userAlloc(capacity * elemSize);
     else 
-        stack->elems = hell_Malloc(capacity * elemSize);
-    if (!stack->elems) 
+        array->elems = hell_Malloc(capacity * elemSize);
+    if (!array->elems) 
         hell_Error(HELL_ERR_FATAL, "Stack allocation failed.\n");
 }
 
-void hell_ArrayPush(Hell_Array* stack, void* elem)
+void hell_ArrayPush(Hell_Array* stack, const void* elem)
 {
     void* stkptr = arrayPtr(stack);
     memcpy(stkptr, elem, stack->elemSize);
@@ -59,6 +59,12 @@ void  hell_ArrayPop(Hell_Array* stack, void* target)
     void* lastel= arrayLastElemPtr(stack);
     memcpy(target, lastel, stack->elemSize);
     stack->count--;
+}
+
+void  hell_ArrayClear(Hell_Array* arr)
+{
+    memset(arr->elems, 0, arr->capacity);
+    arr->count = 0;
 }
 
 // if userAlloc is null will default to Hell_Free
