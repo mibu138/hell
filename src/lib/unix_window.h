@@ -27,10 +27,10 @@
 
 #define MAX_WIN_NAME 32
 
-#ifdef HELL_XCB_DEBUG_MESSAGES 
+#ifdef HELL_XCB_DEBUG_MESSAGES
 #define DPRINT(fmt, ...) hell_DebugPrint("xcb", fmt, ##__VA_ARGS__)
-#else 
-#define DPRINT(fmt, ...) (void)0 
+#else
+#define DPRINT(fmt, ...) (void)0
 #endif
 
 typedef xcb_input_button_press_event_t input_device_event_t;
@@ -44,9 +44,9 @@ typedef struct Hell_XcbWindow {
 
 inline static uint32_t getXcbKeyCode(xcb_key_symbols_t* keysymbols, const xcb_key_press_event_t* event)
 {
-    // XCB documentation is fucking horrible. fucking last parameter is called col. wtf? 
+    // XCB documentation is fucking horrible. fucking last parameter is called col. wtf?
     // no clue what that means. ZERO documentation on this function. trash.
-    xcb_keysym_t keySym = xcb_key_symbols_get_keysym(keysymbols, event->detail, 0); 
+    xcb_keysym_t keySym = xcb_key_symbols_get_keysym(keysymbols, event->detail, 0);
     uint32_t keyCode = 0;
     switch (keySym)
     {
@@ -107,8 +107,8 @@ inline static Hell_MouseEventData getXcbMouseData(const xcb_generic_event_t* eve
     Hell_MouseEventData mouseData;
     mouseData.x = motion->event_x;
     mouseData.y = motion->event_y;
-    if (motion->detail == 1) mouseData.buttonCode = HELL_MOUSE_LEFT; 
-    else if (motion->detail == 2) mouseData.buttonCode = HELL_MOUSE_MID; 
+    if (motion->detail == 1) mouseData.buttonCode = HELL_MOUSE_LEFT;
+    else if (motion->detail == 2) mouseData.buttonCode = HELL_MOUSE_MID;
     else if (motion->detail == 3) mouseData.buttonCode = HELL_MOUSE_RIGHT;
     return mouseData;
 }
@@ -118,8 +118,8 @@ inline static Hell_MouseEventData getXInputMouseData(const input_device_event_t*
     Hell_MouseEventData mouseData;
     mouseData.x = fixed1616ToInt(event->event_x);
     mouseData.y = fixed1616ToInt(event->event_y);
-    if (event->detail == 1) mouseData.buttonCode = HELL_MOUSE_LEFT; 
-    else if (event->detail == 2) mouseData.buttonCode = HELL_MOUSE_MID; 
+    if (event->detail == 1) mouseData.buttonCode = HELL_MOUSE_LEFT;
+    else if (event->detail == 2) mouseData.buttonCode = HELL_MOUSE_MID;
     else if (event->detail == 3) mouseData.buttonCode = HELL_MOUSE_RIGHT;
     return mouseData;
 }
@@ -142,7 +142,7 @@ inline static Hell_ResizeEventData getXcbConfigureData(const xcb_generic_event_t
     return data;
 }
 
-static double 
+static double
 fixed3232ToDouble(xcb_input_fp3232_t input)
 {
     return (double)input.integral + (double)input.frac / (1ULL << 32);
@@ -158,7 +158,7 @@ static struct StylusPressureInfo {
     int        number;
 } stylusPressureInfo;
 
-static void 
+static void
 setUpDevices(Hell_XcbWindow* w)
 {
     xcb_input_xi_query_device_cookie_t cookie = xcb_input_xi_query_device(w->connection, XCB_INPUT_DEVICE_ALL);
@@ -171,18 +171,18 @@ setUpDevices(Hell_XcbWindow* w)
         const char* name = xcb_input_xi_device_info_name(deviceInfo);
         switch (deviceInfo->type)
         {
-            case XCB_INPUT_DEVICE_TYPE_MASTER_KEYBOARD: 
-                DPRINT("Found master keyboard: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
+            case XCB_INPUT_DEVICE_TYPE_MASTER_KEYBOARD:
+                DPRINT("Found master keyboard: deviceId: %d name: %s\n", deviceInfo->deviceid, name);
                 break;
-            case XCB_INPUT_DEVICE_TYPE_MASTER_POINTER: 
-                DPRINT("Found master pointer: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
+            case XCB_INPUT_DEVICE_TYPE_MASTER_POINTER:
+                DPRINT("Found master pointer: deviceId: %d name: %s\n", deviceInfo->deviceid, name);
                 break;
-            case XCB_INPUT_DEVICE_TYPE_SLAVE_KEYBOARD: 
-                DPRINT("Found slave keyboard: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
+            case XCB_INPUT_DEVICE_TYPE_SLAVE_KEYBOARD:
+                DPRINT("Found slave keyboard: deviceId: %d name: %s\n", deviceInfo->deviceid, name);
                 break;
-            case XCB_INPUT_DEVICE_TYPE_SLAVE_POINTER: 
+            case XCB_INPUT_DEVICE_TYPE_SLAVE_POINTER:
                 {
-                DPRINT("Found slave pointer: deviceId: %d name: %s\n", deviceInfo->deviceid, name); 
+                DPRINT("Found slave pointer: deviceId: %d name: %s\n", deviceInfo->deviceid, name);
                 bool isStylus = (strcmp(name, "Wacom Intuos Pro S Pen stylus") == 0); //TODO figure out a better way to check
                 if (isStylus) stylusDeviceId = deviceInfo->deviceid;
                 xcb_input_device_class_iterator_t ci = xcb_input_xi_device_info_classes_iterator(deviceInfo);
@@ -191,7 +191,7 @@ setUpDevices(Hell_XcbWindow* w)
                     xcb_input_device_class_t* classInfo = ci.data;
                     switch (classInfo->type)
                     {
-                        case XCB_INPUT_DEVICE_CLASS_TYPE_VALUATOR: 
+                        case XCB_INPUT_DEVICE_CLASS_TYPE_VALUATOR:
                         {
                             xcb_input_valuator_class_t* vci = (xcb_input_valuator_class_t*)classInfo;
                             DPRINT("VCI Label: %d\n", vci->label);
@@ -208,7 +208,7 @@ setUpDevices(Hell_XcbWindow* w)
                                 stylusPressureInfo.min    = fixed3232ToDouble(vci->min);
                                 stylusPressureInfo.max    = fixed3232ToDouble(vci->max);
                                 stylusPressureInfo.number = vci->number;
-                                DPRINT("Stylus info: \n\tlabel: %d\n\tmin: %f\n\tmax: %f\n\tnumber: %d\n", 
+                                DPRINT("Stylus info: \n\tlabel: %d\n\tmin: %f\n\tmax: %f\n\tnumber: %d\n",
                                         stylusPressureInfo.label, stylusPressureInfo.min, stylusPressureInfo.max, stylusPressureInfo.number);
                             }
                             free(atreply);
@@ -240,7 +240,7 @@ inline static void createXcbWindow(const uint16_t width, const uint16_t height, 
         assert(strnlen(name, MAX_WIN_NAME) < MAX_WIN_NAME);
         strncpy(xcbWindow->name, name, MAX_WIN_NAME);
     }
-    else 
+    else
     {
         strcpy(xcbWindow->name, "floating");
     }
@@ -255,7 +255,7 @@ inline static void createXcbWindow(const uint16_t width, const uint16_t height, 
 
     for (int i = 0; i < screenNum; i++)
     {
-        xcb_screen_next(&iter);   
+        xcb_screen_next(&iter);
     }
 
     xcb_screen_t* screen = iter.data;
@@ -277,36 +277,40 @@ inline static void createXcbWindow(const uint16_t width, const uint16_t height, 
 		XCB_EVENT_MASK_BUTTON_RELEASE |
         XCB_EVENT_MASK_PROPERTY_CHANGE;
 
-    xcb_create_window(xcbWindow->connection, 
-            XCB_COPY_FROM_PARENT,              // depth 
+    xcb_create_window(xcbWindow->connection,
+            XCB_COPY_FROM_PARENT,              // depth
             xcbWindow->window,                  // window id
             screen->root,                      // parent
             0, 0,                              // x and y coordinate of new window
-            width, height, 
-            0,                                 // border wdith 
-            XCB_WINDOW_CLASS_COPY_FROM_PARENT, // class 
-            XCB_COPY_FROM_PARENT,              // visual 
+            width, height,
+            0,                                 // border wdith
+            XCB_WINDOW_CLASS_COPY_FROM_PARENT, // class
+            XCB_COPY_FROM_PARENT,              // visual
             mask, values);                          // masks (TODO: set to get inputs)
 
-    xcb_change_property(xcbWindow->connection, 
-            XCB_PROP_MODE_REPLACE, 
-            xcbWindow->window, 
-            XCB_ATOM_WM_NAME, 
+    xcb_change_property(xcbWindow->connection,
+            XCB_PROP_MODE_REPLACE,
+            xcbWindow->window,
+            XCB_ATOM_WM_NAME,
             XCB_ATOM_STRING, 8, strlen(xcbWindow->name), xcbWindow->name);
 
-    uint32_t xiBitMask = 
+    uint32_t xiBitMask =
         XCB_INPUT_XI_EVENT_MASK_BUTTON_PRESS |
         XCB_INPUT_XI_EVENT_MASK_BUTTON_RELEASE |
         XCB_INPUT_XI_EVENT_MASK_MOTION;
 
     struct fuck_xcb xiMask = {0};
-    xiMask.header.deviceid = XCB_INPUT_DEVICE_ALL;
+    // can set this to XCB_INPUT_DEVICE_ALL, but then it
+    // will generate multiple events for each device.
+    // For instance, there will be an event for the master pointer
+    // device (not real) and the real Razer mouse device.
+    xiMask.header.deviceid = XCB_INPUT_DEVICE_ALL_MASTER;
     xiMask.header.mask_len = 1;
     xiMask.mask = xiBitMask;
 
     // XCB has the absolute worst fucking API I've ever seen. Nothing is documented.
-    // Can only figure out how to use it by poring over the one or two projects in the wild 
-    // that actually bothered to write code for this garbage, and those projects must have 
+    // Can only figure out how to use it by poring over the one or two projects in the wild
+    // that actually bothered to write code for this garbage, and those projects must have
     // gotten some kind of support from the XCB devs because their headers ARE FUCKING INPENETRABLE. SHOVE YOUR TODOS UP YOUR ASS.
     // Its a fucking shit show and should be burned off the face of the earth.
     // Can't wait for wayland to take over and to never again deal with this fucking cunt of an API again.
@@ -356,7 +360,7 @@ static int xi2ValuatorOffset(const unsigned char *maskPtr, int maskLen, int numb
     return -1;
 }
 
-// "inspired" from qt because the xcb devs don't document fucking shit. this is insane and 
+// "inspired" from qt because the xcb devs don't document fucking shit. this is insane and
 // i haven't the foggiest fuck what is going on.
 // TODO re-write this once I learn what fuck is happening here.
 inline static bool magic(const void* event, int valuatorNum, double *value)
@@ -382,7 +386,7 @@ inline static void handleStylusEvent(Hell_EventQueue* queue, Hell_Window* window
     magic(event, stylusPressureInfo.number, &pressure);
     float normalizedPressure = pressure / stylusPressureInfo.max;
     hell_PushStylusEvent(queue, normalizedPressure, window->id);
-    DPRINT("Result: %d Pressure: %f\n", r, normalizedPressure);
+    DPRINT("Stylus event: Pressure: %f\n", normalizedPressure);
 }
 
 inline static void handleXInputEvent(Hell_EventQueue* queue, Hell_Window* window, input_device_event_t* event)
@@ -416,7 +420,7 @@ inline static void handleXInputEvent(Hell_EventQueue* queue, Hell_Window* window
         hell_PushMouseMotionEvent(queue, data.x, data.y, data.buttonCode, window->id);
         break;
         }
-    default: 
+    default:
         break;
     }
     if (event->sourceid == stylusDeviceId)
@@ -437,7 +441,7 @@ start:
         DPRINT("Response type: %d\n", xEvent->response_type);
         switch (XCB_EVENT_RESPONSE_TYPE(xEvent))
         {
-            case XCB_KEY_PRESS: 
+            case XCB_KEY_PRESS:
             {
                 DPRINT("key press\n");
                 uint32_t keyCode = getXcbKeyCode(xcbWindow->keysymbols, (xcb_key_press_event_t*)xEvent);
@@ -445,20 +449,20 @@ start:
                     hell_PushKeyDownEvent(queue, keyCode, window->id);
                 break;
             }
-            case XCB_KEY_RELEASE: 
+            case XCB_KEY_RELEASE:
             {
                 DPRINT("key release %d\n", 5);
                 // bunch of extra stuff here dedicated to detecting autrepeats
                 // the idea is that if a key-release event is detected, followed
                 // by an immediate keypress of the same key, its an autorepeat.
                 // its unclear to me whether very rapidly hitting a key could
-                // result in the same thing, and wheter it is worthwhile 
+                // result in the same thing, and wheter it is worthwhile
                 // accounting for that
                 uint32_t keyCode = getXcbKeyCode(xcbWindow->keysymbols, (xcb_key_press_event_t*)xEvent);
                 if (keyCode == 0) break;
                 // need to see if this is actually an auto repeat
                 xcb_generic_event_t* next = xcb_poll_for_event(xcbWindow->connection);
-                if (next) 
+                if (next)
                 {
                     uint8_t type = XCB_EVENT_RESPONSE_TYPE(next);
                     uint32_t keyCodeNext = getXcbKeyCode(xcbWindow->keysymbols, (xcb_key_press_event_t*)next);
@@ -494,6 +498,7 @@ start:
             case XCB_MOTION_NOTIFY:
             {
                 Hell_MouseEventData data = getXcbMouseData(xEvent);
+                DPRINT("XCB_MOTION_NOTIFY: x %d y %d", data.x, data.y);
                 hell_PushMouseMotionEvent(queue, data.x, data.y, data.buttonCode, window->id);
                 break;
             }
@@ -509,7 +514,7 @@ start:
             }
             // for some reason resize events seem to come through here.... but so do window moves...
             // TODO: throw out window moves.
-            case XCB_CONFIGURE_NOTIFY: 
+            case XCB_CONFIGURE_NOTIFY:
             {
                 Hell_ResizeEventData data = getXcbConfigureData(xEvent);
                 if (data.width == window->width && data.height == window->height)
