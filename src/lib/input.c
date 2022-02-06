@@ -13,8 +13,8 @@
 #include <time.h>
 //
 #ifdef UNIX
-#include <unistd.h>
 #include <termios.h>
+#include <unistd.h>
 // stash the tc at program start here so we can reset it on shut down
 struct termios origTc;
 #elif WIN32
@@ -59,11 +59,11 @@ typedef struct Hell_Console {
 
 typedef struct Hell_EventQueue {
     Hell_Subscription subscriptions[MAX_SUBSCRIBERS];
-    int                 subscriberCount;
+    int               subscriberCount;
     Hell_Event        queue[MAX_QUEUE_EVENTS];
     // bk000306: initialize
-    int                 head;
-    int                 tail;
+    int               head;
+    int               tail;
 } Hell_EventQueue;
 
 #ifdef UNIX
@@ -88,8 +88,8 @@ getUnixMicroSeconds(void)
 {
     struct timespec curTime;
     clock_gettime(UNIX_CLOCK_ID, &curTime);
-    time_t   s  = curTime.tv_sec - unixEpoch.tv_sec;
-    long     ns = curTime.tv_nsec - unixEpoch.tv_nsec;
+    time_t  s  = curTime.tv_sec - unixEpoch.tv_sec;
+    long    ns = curTime.tv_nsec - unixEpoch.tv_nsec;
     int64_t ms = s * 1000000 + ns / 1000;
     return ms;
 }
@@ -242,27 +242,27 @@ hell_StartClock(void)
     initTime();
 }
 
-bool 
+bool
 hell_ClockStarted(void)
 {
     return globalClockStarted;
 }
 
-void hell_CoagulateInput(Hell_EventQueue* queue, Hell_Console* console, uint32_t windowCount, Hell_Window* windows[])
+void
+hell_CoagulateInput(Hell_EventQueue* queue, Hell_Console* console,
+                    uint32_t windowCount, Hell_Window* windows[])
 {
     assert(queue);
     if (console)
     {
-        char*        ci = getConsoleInput(console);
+        char* ci = getConsoleInput(console);
         if (ci)
         {
-            Hell_Event ev = {
-                .type = HELL_EVENT_TYPE_CONSOLE,
-                .mask = HELL_EVENT_MASK_CONSOLE_BIT
-            };
-            // this should put a trailing null at the end of the data, but not sure
-            // if we need this...
-            // ev.data.consoleData.ptrLen = strnlen(ci, MAX_EDIT_LINE - 1) + 1;
+            Hell_Event ev          = {.type = HELL_EVENT_TYPE_CONSOLE,
+                                      .mask = HELL_EVENT_MASK_CONSOLE_BIT};
+            // this should put a trailing null at the end of the data, but not
+            // sure if we need this... ev.data.consoleData.ptrLen = strnlen(ci,
+            // MAX_EDIT_LINE - 1) + 1;
             ev.data.conData.ptrLen = strnlen(ci, MAX_EDIT_LINE);
             ev.data.conData.ptr    = hell_Malloc(ev.data.conData.ptrLen);
             // should copy a null at the end
@@ -278,13 +278,14 @@ void hell_CoagulateInput(Hell_EventQueue* queue, Hell_Console* console, uint32_t
 }
 
 void
-hell_SolveInput(Hell_EventQueue* queue, Hell_Event* frame_event_stack, int* frame_event_count)
+hell_SolveInput(Hell_EventQueue* queue, Hell_Event* frame_event_stack,
+                int* frame_event_count)
 {
     Hell_Event* event;
     for (; queue->tail != queue->head;
          queue->tail = (queue->tail + 1) % MAX_QUEUE_EVENTS)
     {
-        event = &queue->queue[queue->tail];
+        event              = &queue->queue[queue->tail];
         bool event_handled = false;
         // hell_Announce("Event: type %d time %ld \n", event->type,
         // event->time);
@@ -293,17 +294,19 @@ hell_SolveInput(Hell_EventQueue* queue, Hell_Event* frame_event_stack, int* fram
             const Hell_Subscription sub = queue->subscriptions[i];
             if (sub.eventMask & event->mask)
             {
-                // note the event may not have the window mask set and this condition will still go through
-                // thus its up to the subscriber to set the window bit if they way to only recieve events for a cetain 
-                // window
+                // note the event may not have the window mask set and this
+                // condition will still go through thus its up to the subscriber
+                // to set the window bit if they way to only recieve events for
+                // a cetain window
                 if (sub.eventMask & HELL_EVENT_MASK_WINDOW_BIT)
                 {
-                    if(sub.windowID == event->data.winData.windowID)
+                    if (sub.windowID == event->data.winData.windowID)
                     {
                         if (sub.func(event, sub.data))
                         {
                             event_handled = true;
-                            break; // if func returns true the event break from the loop
+                            break; // if func returns true the event break from
+                                   // the loop
                         }
                     }
                 }
@@ -312,7 +315,8 @@ hell_SolveInput(Hell_EventQueue* queue, Hell_Event* frame_event_stack, int* fram
                     if (sub.func(event, sub.data))
                     {
                         event_handled = true;
-                        break; // if func returns true the event break from the loop
+                        break; // if func returns true the event break from the
+                               // loop
                     }
                 }
             }
@@ -334,7 +338,8 @@ hell_SolveInput(Hell_EventQueue* queue, Hell_Event* frame_event_stack, int* fram
 // not used yet... issue is we still have hell itself processing some events,
 // especially console ones, which need additional freeing.
 // so we dont want to give the client full access to the queue
-const Hell_Event* hell_PullEvent(Hell_EventQueue* queue)
+const Hell_Event*
+hell_PullEvent(Hell_EventQueue* queue)
 {
     Hell_Event* event = NULL;
     if (queue->tail != queue->head)
@@ -344,15 +349,11 @@ const Hell_Event* hell_PullEvent(Hell_EventQueue* queue)
 }
 
 void
-hell_Subscribe(Hell_EventQueue* queue, Hell_EventMask mask, Hell_WindowID winid, Hell_SubscriberFn func,
-                           void* data)
+hell_Subscribe(Hell_EventQueue* queue, Hell_EventMask mask, Hell_WindowID winid,
+               Hell_SubscriberFn func, void* data)
 {
-    queue->subscriptions[queue->subscriberCount++] =
-        (Hell_Subscription){
-            .data = data, 
-            .func = func, 
-            .windowID = winid,
-            .eventMask = mask};
+    queue->subscriptions[queue->subscriberCount++] = (Hell_Subscription){
+        .data = data, .func = func, .windowID = winid, .eventMask = mask};
 }
 
 Hell_Tick
@@ -377,20 +378,19 @@ hell_PushMouseDownEvent(Hell_EventQueue* queue, int16_t x, int16_t y,
     ev.data.winData.data.mouseData.x          = x;
     ev.data.winData.data.mouseData.y          = y;
     ev.data.winData.data.mouseData.buttonCode = buttonCode;
-    ev.data.winData.windowID = winid;
+    ev.data.winData.windowID                  = winid;
     pushEvent(queue, ev);
 }
 
-void 
-hell_PushStylusEvent(Hell_EventQueue* queue, float pressure, Hell_WindowID winid)
+void
+hell_PushStylusEvent(Hell_EventQueue* queue, float pressure,
+                     Hell_WindowID winid)
 {
-    Hell_Event ev = {
-        .type = HELL_EVENT_TYPE_STYLUS,
-        .mask = HELL_EVENT_MASK_POINTER_BIT,
-        .time = hell_Time()
-    };
+    Hell_Event ev                            = {.type = HELL_EVENT_TYPE_STYLUS,
+                                                .mask = HELL_EVENT_MASK_POINTER_BIT,
+                                                .time = hell_Time()};
     ev.data.winData.data.stylusData.pressure = pressure;
-    ev.data.winData.windowID = winid;
+    ev.data.winData.windowID                 = winid;
     pushEvent(queue, ev);
 }
 
@@ -406,7 +406,7 @@ hell_PushMouseUpEvent(Hell_EventQueue* queue, int16_t x, int16_t y,
     ev.data.winData.data.mouseData.x          = x;
     ev.data.winData.data.mouseData.y          = y;
     ev.data.winData.data.mouseData.buttonCode = buttonCode;
-    ev.data.winData.windowID   = winid;
+    ev.data.winData.windowID                  = winid;
     pushEvent(queue, ev);
 }
 
@@ -422,27 +422,31 @@ hell_PushMouseMotionEvent(Hell_EventQueue* queue, int16_t x, int16_t y,
     ev.data.winData.data.mouseData.x          = x;
     ev.data.winData.data.mouseData.y          = y;
     ev.data.winData.data.mouseData.buttonCode = buttonCode;
-    ev.data.winData.windowID   = winid;
+    ev.data.winData.windowID                  = winid;
     pushEvent(queue, ev);
 }
 
 void
-hell_PushKeyDownEvent(Hell_EventQueue* queue, uint32_t keyCode, Hell_WindowID winid)
+hell_PushKeyDownEvent(Hell_EventQueue* queue, uint32_t keyCode,
+                      Hell_WindowID winid)
 {
-    Hell_Event ev = {
-        .type = HELL_EVENT_TYPE_KEYDOWN, .mask = HELL_EVENT_MASK_KEY_BIT, .time = hell_Time()};
+    Hell_Event ev                        = {.type = HELL_EVENT_TYPE_KEYDOWN,
+                                            .mask = HELL_EVENT_MASK_KEY_BIT,
+                                            .time = hell_Time()};
     ev.data.winData.data.keyData.keyCode = keyCode;
-    ev.data.winData.windowID = winid;
+    ev.data.winData.windowID             = winid;
     pushEvent(queue, ev);
 }
 
 void
-hell_PushKeyUpEvent(Hell_EventQueue* queue, uint32_t keyCode, Hell_WindowID winid)
+hell_PushKeyUpEvent(Hell_EventQueue* queue, uint32_t keyCode,
+                    Hell_WindowID winid)
 {
-    Hell_Event ev = {
-        .type = HELL_EVENT_TYPE_KEYUP, .mask = HELL_EVENT_MASK_KEY_BIT, .time = hell_Time()};
+    Hell_Event ev                        = {.type = HELL_EVENT_TYPE_KEYUP,
+                                            .mask = HELL_EVENT_MASK_KEY_BIT,
+                                            .time = hell_Time()};
     ev.data.winData.data.keyData.keyCode = keyCode;
-    ev.data.winData.windowID = winid;
+    ev.data.winData.windowID             = winid;
     pushEvent(queue, ev);
 }
 
@@ -450,11 +454,12 @@ void
 hell_PushWindowResizeEvent(Hell_EventQueue* queue, unsigned int width,
                            unsigned int height, Hell_WindowID winid)
 {
-    Hell_Event ev = {
-        .time = hell_Time(), .type = HELL_EVENT_TYPE_RESIZE, .mask = HELL_EVENT_MASK_WINDOW_BIT};
+    Hell_Event ev                          = {.time = hell_Time(),
+                                              .type = HELL_EVENT_TYPE_RESIZE,
+                                              .mask = HELL_EVENT_MASK_WINDOW_BIT};
     ev.data.winData.data.resizeData.width  = width;
     ev.data.winData.data.resizeData.height = height;
-    ev.data.winData.windowID = winid;
+    ev.data.winData.windowID               = winid;
     pushEvent(queue, ev);
 }
 
@@ -488,8 +493,7 @@ hell_DestroyConsole(Hell_Console* console)
 }
 
 void
-hell_Unsubscribe(Hell_EventQueue*          queue,
-                               const Hell_SubscriberFn fn)
+hell_Unsubscribe(Hell_EventQueue* queue, const Hell_SubscriberFn fn)
 {
     assert(queue->subscriberCount > 0);
     hell_DPrint("Unsubscribing fn...\n");
@@ -510,66 +514,75 @@ hell_Unsubscribe(Hell_EventQueue*          queue,
                                                     // count if fnIndex is 0
 }
 
-uint64_t hell_SizeOfConsole(void)
+uint64_t
+hell_SizeOfConsole(void)
 {
     return sizeof(Hell_Console);
 }
 
-uint64_t hell_SizeOfEventQueue(void)
+uint64_t
+hell_SizeOfEventQueue(void)
 {
     return sizeof(Hell_EventQueue);
 }
 
-uint64_t hell_SizeOfWindow(void)
+uint64_t
+hell_SizeOfWindow(void)
 {
     return sizeof(Hell_Window);
 }
 
-Hell_Window* hell_AllocWindow(void)
+Hell_Window*
+hell_AllocWindow(void)
 {
     return hell_Malloc(sizeof(Hell_Window));
 }
 
-Hell_EventQueue* hell_AllocEventQueue(void)
+Hell_EventQueue*
+hell_AllocEventQueue(void)
 {
     return hell_Malloc(sizeof(Hell_EventQueue));
 }
 
-Hell_Console* hell_AllocConsole(void)
+Hell_Console*
+hell_AllocConsole(void)
 {
     return hell_Malloc(sizeof(Hell_Console));
 }
 
-uint16_t 
+uint16_t
 hell_GetWindowResizeWidth(const Hell_Event* event)
 {
     assert(event->type == HELL_EVENT_TYPE_RESIZE);
     return event->data.winData.data.resizeData.width;
 }
 
-uint16_t 
+uint16_t
 hell_GetWindowResizeHeight(const Hell_Event* event)
 {
     assert(event->type == HELL_EVENT_TYPE_RESIZE);
     return event->data.winData.data.resizeData.height;
 }
 
-int16_t  hell_GetMouseX(const Hell_Event* event)
+int16_t
+hell_GetMouseX(const Hell_Event* event)
 {
     return event->data.winData.data.mouseData.x;
 }
-int16_t  hell_GetMouseY(const Hell_Event* event)
+int16_t
+hell_GetMouseY(const Hell_Event* event)
 {
     return event->data.winData.data.mouseData.y;
 }
 
-
-uint8_t hell_GetEventButtonCode(const Hell_Event* event)
+uint8_t
+hell_GetEventButtonCode(const Hell_Event* event)
 {
     return event->data.winData.data.mouseData.buttonCode;
 }
 
-uint8_t hell_GetEventKeyCode(const Hell_Event* event)
+uint8_t
+hell_GetEventKeyCode(const Hell_Event* event)
 {
     return event->data.winData.data.keyData.keyCode;
 }
