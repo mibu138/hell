@@ -192,3 +192,12 @@ hell_Sleep(double s)
     Sleep(us / 1000);
 #endif
 }
+
+void hell_MicroSleep(uint64_t us)
+{
+#ifdef UNIX
+    usleep(us);
+#elif defined(WIN32)
+    Sleep(us / 1000);
+#endif
+}

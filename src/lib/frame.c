@@ -3,6 +3,7 @@
 #include "io.h"
 #include "window.h"
 #include "input.h"
+#include "minmax.h"
 #include "client.h"
 #include "server.h"
 #include "private.h"
@@ -13,7 +14,7 @@
 #include "types.h"
 #include "vars.h"
 
-typedef Hell_C_Var Var;
+typedef Hell_Var Var;
 
 static void dummyUserFrame(u64 fi, u64 dt)
 {
@@ -40,8 +41,9 @@ hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Conso
     hellmouth->windows = windows;
     hellmouth->userFrame = userFrame ? userFrame : dummyUserFrame;
     hellmouth->userShutDown = userShutDown;
+    hellmouth->targetFrameDuration = 16000; //us
     hell_AddCommand(grimoire, "quit", hell_Quit, hellmouth);
-    const Hell_C_Var* dedicated = hell_GetVar(grimoire, "dedicated", "0", 0);
+    const Hell_Var* dedicated = hell_GetVar(grimoire, "dedicated", "0", 0);
     sv_Init();
     if (!dedicated->value)
         cl_Init();
@@ -62,7 +64,7 @@ hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_He
     hell_CreateGrimoire(hm->eventqueue, hm->grimoire);
 
     hell_AddCommand(hm->grimoire, "quit", hell_Quit, hm);
-    const Hell_C_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", "0", 0);
+    const Hell_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", "0", 0);
     sv_Init();
     if (!dedicated->value)
         cl_Init();
@@ -83,7 +85,7 @@ hell_OpenHellmouth_NoConsole(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDow
     hell_CreateGrimoire(hm->eventqueue, hm->grimoire);
 
     hell_AddCommand(hm->grimoire, "quit", hell_Quit, hm);
-    const Hell_C_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", "0", 0);
+    const Hell_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", "0", 0);
     sv_Init();
     if (!dedicated->value)
         cl_Init();
@@ -111,21 +113,21 @@ void hell_Frame(Hell_Hellmouth* h, Tick delta)
 
 void hell_Loop(Hell_Hellmouth* h)
 {
-    const Var* vFps = hell_GetVar(h->grimoire, HELL_VAR_NAME_MAX_FPS, "60", HELL_C_VAR_ARCHIVE_BIT);
-    const double targetFrameLength = (1.0 / vFps->value);
+    Tick start, delta;
+
     hell_StartClock();
-    Tick startTick = hell_Time(); 
-    Tick endTick = startTick;
     hell_Announce("Entering Hell Loop.\n");
+    delta = h->targetFrameDuration;
     while (1)
     {
         // this is just a place holder
-        hell_Sleep(targetFrameLength);
-        endTick = hell_Time();
-        hell_Frame(h, endTick - startTick);
-        h->userFrame(h->frameCount, endTick - startTick);
-        startTick = endTick;
+        start = hell_Time();
+        hell_Frame(h, delta);
+        h->userFrame(h->frameCount, delta);
         h->frameCount++;
+        delta = hell_Time() - start;
+        hell_MicroSleep(MAX(h->targetFrameDuration - delta, 0));
+        delta = hell_Time() - start;
     }
 }
 

@@ -26,6 +26,7 @@ typedef struct Hell_Hellmouth {
     Hell_FrameFn     userFrame;
     Hell_ShutDownFn  userShutDown;
     u64              frameCount;
+    i64              targetFrameDuration;
 } Hell_Hellmouth;
 
 void hell_Print(const char* fmt, ...);
@@ -64,6 +65,7 @@ Hell_Window* hell_HellmouthAddWindow(Hell_Hellmouth* hm, u16 w, u16 h, const cha
 void hell_Exit(int code);
 // sleep for s seconds
 void hell_Sleep(double s);
+void hell_MicroSleep(uint64_t us);
 
 // platform agnostic library loading
 void* hell_LoadLibrary(const char* name);

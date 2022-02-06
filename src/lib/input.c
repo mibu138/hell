@@ -84,14 +84,14 @@ initUnixTime(void)
     clock_gettime(UNIX_CLOCK_ID, &unixEpoch);
 }
 
-static uint64_t
+static int64_t
 getUnixMicroSeconds(void)
 {
     struct timespec curTime;
     clock_gettime(UNIX_CLOCK_ID, &curTime);
     time_t   s  = curTime.tv_sec - unixEpoch.tv_sec;
     long     ns = curTime.tv_nsec - unixEpoch.tv_nsec;
-    uint64_t ms = s * 1000000 + ns / 1000;
+    int64_t ms = s * 1000000 + ns / 1000;
     return ms;
 }
 
@@ -107,7 +107,7 @@ initWinTime(void)
     QueryPerformanceCounter(&winEpoch);
 }
 
-static uint64_t
+static int64_t
 getWinMicroSeconds(void)
 {
     LARGE_INTEGER curTicks, elapsedTime;
@@ -346,7 +346,7 @@ hell_Subscribe(Hell_EventQueue* queue, Hell_EventMask mask, Hell_WindowID winid,
             .eventMask = mask};
 }
 
-uint64_t
+Hell_Tick
 hell_Time()
 {
 #ifdef UNIX

@@ -19,7 +19,7 @@ typedef struct Cmd {
     CommandFn   function;
 } Cmd;
 
-typedef Hell_C_Var Var;
+typedef Hell_Var Var;
 
 #define	MAX_CMD_BUFFER	16384
 #define	MAX_CMD_LINE	1024
@@ -37,6 +37,7 @@ typedef struct Hell_Grimoire {
     int   cmdArgc;
     char* cmdArgv[MAX_TOKENS];
     char  cmdTokenized[MAX_TOKEN_SIZE * MAX_TOKENS];
+    uint32_t dirt;
 } Hell_Grimoire;
 
 // so we can rename the struct without having to change the signatures
@@ -250,7 +251,7 @@ void hell_AddCommand2(Hell_Grimoire* grim, const char* cmdName, Hell_CmdFn funct
 }
 
 
-void hell_SetVar(Hell_Grimoire* grim, const char* name, const char* value, const Hell_C_VarFlagBits flags)
+void hell_SetVar(Hell_Grimoire* grim, const char* name, const char* value, const Hell_VarFlagBits flags)
 {
     Var* var = findVar(grim, name);
 
