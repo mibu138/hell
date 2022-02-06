@@ -43,7 +43,7 @@ hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Conso
     hellmouth->userShutDown = userShutDown;
     hellmouth->targetFrameDuration = 16000; //us
     hell_AddCommand(grimoire, "quit", hell_Quit, hellmouth);
-    const Hell_Var* dedicated = hell_GetVar(grimoire, "dedicated", "0", 0);
+    const Hell_Var* dedicated = hell_GetVar(grimoire, "dedicated", 0, 0);
     sv_Init();
     if (!dedicated->value)
         cl_Init();
@@ -64,7 +64,7 @@ hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_He
     hell_CreateGrimoire(hm->eventqueue, hm->grimoire);
 
     hell_AddCommand(hm->grimoire, "quit", hell_Quit, hm);
-    const Hell_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", "0", 0);
+    const Hell_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", 0, 0);
     sv_Init();
     if (!dedicated->value)
         cl_Init();
@@ -85,7 +85,7 @@ hell_OpenHellmouth_NoConsole(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDow
     hell_CreateGrimoire(hm->eventqueue, hm->grimoire);
 
     hell_AddCommand(hm->grimoire, "quit", hell_Quit, hm);
-    const Hell_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", "0", 0);
+    const Hell_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", 0, 0);
     sv_Init();
     if (!dedicated->value)
         cl_Init();
@@ -132,7 +132,7 @@ void hell_Loop(Hell_Hellmouth* h)
 
     // vars should never be removed once an application starts, so it is safe to
     // hold onto a pointer to one.
-    const Hell_Var* var_fps = hell_GetVar(h->grimoire, "fps", "60", HELL_VAR_NONE_BIT);
+    const Hell_Var* var_fps = hell_GetVar(h->grimoire, "fps", 60.0, 0);
 
     hell_StartClock();
     hell_Announce("Entering Hell Loop.\n");
