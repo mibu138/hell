@@ -76,3 +76,4 @@ void  hell_DestroyArray(Hell_Array* stack, HellFreeFn userFree)
         hell_Free(stack->elems);
     memset(stack, 0, sizeof(*stack));
 }
+

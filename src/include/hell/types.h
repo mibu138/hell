@@ -6,6 +6,7 @@
 typedef uint8_t  Hell_Byte;
 typedef uint64_t Hell_Size;
 typedef int64_t Hell_Tick;
+typedef int64_t Hell_Frame;
 typedef uint16_t Hell_WindowID;
 #define HELL_WINDOW_ID_MAX UINT16_MAX
 
@@ -13,6 +14,7 @@ typedef uint16_t Hell_WindowID;
 typedef Hell_Byte Byte;
 typedef Hell_Size Size;
 typedef Hell_Tick Tick;
+typedef Hell_Frame Frame;
 #endif
 
 typedef uint8_t  u8;

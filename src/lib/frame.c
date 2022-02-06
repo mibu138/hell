@@ -16,7 +16,7 @@
 
 typedef Hell_Var Var;
 
-static void dummyUserFrame(u64 fi, u64 dt)
+static void dummyUserFrame(Hell_Frame fi, Hell_Tick dt)
 {
     // no op we call in case user frame is not provided
     // may be an optimization? gets rid of an if statement in the loop
@@ -107,26 +107,46 @@ hell_HellmouthAddWindow(Hell_Hellmouth* hm, u16 w, u16 h, const char* name)
 void hell_Frame(Hell_Hellmouth* h, Tick delta)
 {
     hell_CoagulateInput(h->eventqueue, h->console, h->windowCount, h->windows);
-    hell_SolveInput(h->eventqueue);
+    hell_SolveInput(h->eventqueue, h->frameEventStack, &h->frameEventCount);
     hell_Incantate(h->grimoire);
+}
+
+const Hell_Event*
+hell_GetEvents(Hell_Hellmouth* h, int* event_count)
+{
+    *event_count = h->frameEventCount;
+    return h->frameEventStack;
+}
+
+static Tick
+fpsToFrameDur(double fps)
+{
+    return (1.0 / fps) * 1e6;
 }
 
 void hell_Loop(Hell_Hellmouth* h)
 {
-    Tick start, delta;
+    Tick start, delta, target;
+    Hell_Event frame_event_stack[MAX_QUEUE_EVENTS];
+    h->frameEventStack = frame_event_stack;
+
+    // vars should never be removed once an application starts, so it is safe to
+    // hold onto a pointer to one.
+    const Hell_Var* var_fps = hell_GetVar(h->grimoire, "fps", "60", HELL_VAR_NONE_BIT);
 
     hell_StartClock();
     hell_Announce("Entering Hell Loop.\n");
-    delta = h->targetFrameDuration;
+    delta = fpsToFrameDur(var_fps->value);
     while (1)
     {
-        // this is just a place holder
         start = hell_Time();
+        h->frameEventCount = 0;
         hell_Frame(h, delta);
         h->userFrame(h->frameCount, delta);
         h->frameCount++;
         delta = hell_Time() - start;
-        hell_MicroSleep(MAX(h->targetFrameDuration - delta, 0));
+        target = fpsToFrameDur(var_fps->value);
+        hell_MicroSleep(MAX(target - delta, 0));
         delta = hell_Time() - start;
     }
 }

@@ -103,7 +103,12 @@ bool hell_ClockStarted(void);
 void hell_CoagulateInput(Hell_EventQueue* queue, Hell_Console* console, uint32_t windowCount, Hell_Window* windows[]);
 
 // drains the event queue and calls subscriber functions
-void hell_SolveInput(Hell_EventQueue* queue);
+// The frame_event_stack is an array that events will be copied into if no
+// subscriber function claims them. frame_event_count will be incremented.
+// the purpose is to have application loops where the input handling is donw
+// insde the applications main frame function, instead of in a subscriber
+// funciton
+void hell_SolveInput(Hell_EventQueue* queue, Hell_Event* frame_event_stack, int* frame_event_count);
 
 void hell_Subscribe(Hell_EventQueue* queue, Hell_EventMask mask, Hell_WindowID winid, Hell_SubscriberFn func,
                            void* data);

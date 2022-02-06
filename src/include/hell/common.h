@@ -13,7 +13,7 @@ typedef enum { HELL_ERR_FATAL, HELL_ERR_MILD } Hell_ErrorCode;
 typedef struct Hell_Window    Hell_Window;
 typedef struct Hell_Hellmouth Hell_Hellmouth;
 
-typedef void (*Hell_FrameFn)(u64 frameNumber, u64 dt /*microseconds*/);
+typedef void (*Hell_FrameFn)(Hell_Frame frameNumber, Hell_Tick dt /*microseconds*/);
 typedef void (*Hell_ShutDownFn)(void);
 
 typedef struct Hell_Window    Hell_Window;
@@ -27,6 +27,9 @@ typedef struct Hell_Hellmouth {
     Hell_ShutDownFn  userShutDown;
     u64              frameCount;
     i64              targetFrameDuration;
+    // points to a buffer on the stack in hell_Loop()
+    Hell_Event*      frameEventStack;
+    int              frameEventCount;
 } Hell_Hellmouth;
 
 void hell_Print(const char* fmt, ...);
@@ -79,6 +82,9 @@ bool hell_FileExists(const char* path);
 void hell_Loop(Hell_Hellmouth*);
 
 void hell_Frame(Hell_Hellmouth*, Hell_Tick dt); // run single frame
+
+const Hell_Event*
+hell_GetEvents(Hell_Hellmouth* h, int* event_count);
 
 // uber function that call the individual shut down functions in the correct
 // order

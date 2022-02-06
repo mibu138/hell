@@ -43,6 +43,16 @@ typedef struct Hell_Grimoire {
 // so we can rename the struct without having to change the signatures
 typedef Hell_Grimoire Grim;
 
+static Var* findVar(const Grim* grim, const char* name)
+{
+    for (Var* var = grim->variables; var; var = var->next)
+    {
+        if (strcmp(name, var->name) == 0)
+            return var;
+    }
+    return NULL;
+}
+
 static void cmdListFn(Hell_Grimoire* grim, void* data)
 {
     // could filter based on 2nd argument at some point
@@ -59,6 +69,18 @@ static void cmdEchoFn(Hell_Grimoire* grim, void* data)
 	for (int i=1 ; i<grim->cmdArgc ; i++)
 		hell_Print("%s ", grim->cmdArgv[i]);
 	hell_Print("\n");
+}
+
+static void cmdSetVarFn(Hell_Grimoire* grim, void* data)
+{
+    const char* varname = hell_GetArg(grim, 1);
+    const char* varval  = hell_GetArg(grim, 2);
+    const Var* var = findVar(grim, varname);
+    if (!var)
+    {
+        hell_Print("Var %s does not exist\n", varname);
+    }
+    hell_SetVar(grim, varname, varval, HELL_VAR_NONE_BIT);
 }
 
 static void varListFn(Hell_Grimoire* grim, void* data)
@@ -138,6 +160,7 @@ static void cmdInit(Grim* grim)
 {
 	hell_AddCommand(grim, "cmdlist", cmdListFn, grim);
 	hell_AddCommand(grim, "echo",    cmdEchoFn, grim);
+	hell_AddCommand(grim, "setvar",  cmdSetVarFn, grim);
 }
 
 static void varInit(Grim* grim)
@@ -145,17 +168,6 @@ static void varInit(Grim* grim)
     hell_AddCommand(grim, "varlist", varListFn, grim);
 	hell_AddCommand(grim, "set", varSetFn, grim);
 }
-
-static Var* findVar(const Grim* grim, const char* name)
-{
-    for (Var* var = grim->variables; var; var = var->next)
-    {
-        if (strcmp(name, var->name) == 0)
-            return var;
-    }
-    return NULL;
-}
-
 
 static bool consoleEventHandler(const Hell_Event* event, void* pGrimoire)
 {
@@ -250,12 +262,18 @@ void hell_AddCommand2(Hell_Grimoire* grim, const char* cmdName, Hell_CmdFn funct
     *pos = cmd;
 }
 
-
 void hell_SetVar(Hell_Grimoire* grim, const char* name, const char* value, const Hell_VarFlagBits flags)
 {
     Var* var = findVar(grim, name);
 
-    assert(!var && "Need to handle overwriting the var if it exists.");
+    if (var)
+    {
+        hell_Free(var->string);
+        var->string = hell_CopyString(value);
+        var->value = strtof(var->string, NULL);
+        var->flags |= flags;
+        return;
+    }
 
     var = hell_Malloc(sizeof(Var));
     var->name = hell_CopyString(name);

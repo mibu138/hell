@@ -15,6 +15,14 @@ typedef struct Hell_Array {
     HellReallocFn reallocFn;
 } Hell_Array;
 
+typedef struct Hell_StackArray {
+    u32           count;
+    void*         elems;
+    u32           capacity;
+    u32           elemSize;
+    HellReallocFn reallocFn;
+} Hell_StackArray;
+
 // if userAlloc or userRealloc is null will default to Hell_Malloc or Hell_Realloc
 void  hell_CreateArray(u32 capacity, u32 elemSize, HellAllocFn userAlloc, HellReallocFn userRealloc, Hell_Array* array);
 void  hell_ArrayPush(Hell_Array*, const void* elem);

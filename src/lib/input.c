@@ -49,7 +49,6 @@ typedef struct {
 
 //
 // bk000306: upped this from 64
-#define MAX_QUEUE_EVENTS 64
 #define MASK_QUEUE_EVENTS (MAX_QUED_EVENTS - 1)
 
 typedef struct Hell_Console {
@@ -279,13 +278,14 @@ void hell_CoagulateInput(Hell_EventQueue* queue, Hell_Console* console, uint32_t
 }
 
 void
-hell_SolveInput(Hell_EventQueue* queue)
+hell_SolveInput(Hell_EventQueue* queue, Hell_Event* frame_event_stack, int* frame_event_count)
 {
     Hell_Event* event;
     for (; queue->tail != queue->head;
          queue->tail = (queue->tail + 1) % MAX_QUEUE_EVENTS)
     {
         event = &queue->queue[queue->tail];
+        bool event_handled = false;
         // hell_Announce("Event: type %d time %ld \n", event->type,
         // event->time);
         for (int i = 0; i < queue->subscriberCount; i++)
@@ -302,18 +302,27 @@ hell_SolveInput(Hell_EventQueue* queue)
                     {
                         if (sub.func(event, sub.data))
                         {
+                            event_handled = true;
                             break; // if func returns true the event break from the loop
                         }
                     }
                 }
-                else 
+                else
                 {
                     if (sub.func(event, sub.data))
                     {
+                        event_handled = true;
                         break; // if func returns true the event break from the loop
                     }
                 }
             }
+        }
+        // dont send console events to frame stack because they require freeing
+        // after they are used.
+        if (!event_handled && event->type != HELL_EVENT_TYPE_CONSOLE)
+        {
+            frame_event_stack[*frame_event_count] = *event;
+            (*frame_event_count)++;
         }
         if (event->type == HELL_EVENT_TYPE_CONSOLE)
         {
