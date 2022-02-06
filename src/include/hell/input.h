@@ -60,6 +60,8 @@ typedef enum Hell_EventType {
     HELL_EVENT_TYPE_KEYUP,
     HELL_EVENT_TYPE_MOUSEDOWN,
     HELL_EVENT_TYPE_MOUSEUP,
+    HELL_EVENT_TYPE_MOUSEWHEELDOWN,
+    HELL_EVENT_TYPE_MOUSEWHEELUP,
     HELL_EVENT_TYPE_MOTION,
     HELL_EVENT_TYPE_RESIZE,
     HELL_EVENT_TYPE_CONSOLE,
@@ -118,6 +120,8 @@ void hell_PushWindowResizeEvent(Hell_EventQueue*, uint32_t width,
                                 uint32_t height, Hell_WindowID winid);
 void hell_PushMouseDownEvent(Hell_EventQueue*, int16_t x, int16_t y,
                              uint8_t buttonCode, Hell_WindowID winid);
+void hell_PushMouseWheelDownEvent(Hell_EventQueue* queue, int16_t x, int16_t y, Hell_WindowID winid);
+void hell_PushMouseWheelUpEvent(Hell_EventQueue* queue, int16_t x, int16_t y, Hell_WindowID winid);
 void hell_PushMouseUpEvent(Hell_EventQueue*, int16_t x, int16_t y,
                            uint8_t buttonCode, Hell_WindowID winid);
 void hell_PushMouseMotionEvent(Hell_EventQueue*, int16_t x, int16_t y,

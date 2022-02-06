@@ -382,7 +382,7 @@ inline static void handleStylusEvent(Hell_EventQueue* queue, Hell_Window* window
     magic(event, stylusPressureInfo.number, &pressure);
     float normalizedPressure = pressure / stylusPressureInfo.max;
     hell_PushStylusEvent(queue, normalizedPressure, window->id);
-    DPRINT("Result: %d Pressure: %f\n", r, normalizedPressure);
+    DPRINT("Pressure: %f\n", normalizedPressure);
 }
 
 inline static void handleXInputEvent(Hell_EventQueue* queue, Hell_Window* window, input_device_event_t* event)
@@ -390,6 +390,26 @@ inline static void handleXInputEvent(Hell_EventQueue* queue, Hell_Window* window
     DPRINT("Event device ID: %d\n", event->deviceid);
     DPRINT("Event source ID: %d\n", event->sourceid);
     DPRINT("Event type: %d\n", event->event_type);
+    DPRINT("Event detail: %d\n", event->detail);
+    switch (event->detail)
+    {
+        case 5:
+            {
+        DPRINT("scroll down event\n");
+        Hell_MouseEventData data = getXInputMouseData(event);
+        DPRINT("Mouse event data:\n\t x: %d y: %d button: %d\n", data.x, data.y, data.buttonCode);
+        hell_PushMouseWheelDownEvent(queue, data.x, data.x, window->id);
+        return; // dont want to do anything else
+            }
+        case 4:
+            {
+        DPRINT("scroll up event\n");
+        Hell_MouseEventData data = getXInputMouseData(event);
+        DPRINT("Mouse event data:\n\t x: %d y: %d button: %d\n", data.x, data.y, data.buttonCode);
+        hell_PushMouseWheelUpEvent(queue, data.x, data.x, window->id);
+        return; // dont want to do anything else
+            }
+    }
     switch (event->event_type)
     {
     case XCB_BUTTON_PRESS:
@@ -417,7 +437,10 @@ inline static void handleXInputEvent(Hell_EventQueue* queue, Hell_Window* window
         break;
         }
     default: 
+        {
+        DPRINT("unrecognized event_type");
         break;
+        }
     }
     if (event->sourceid == stylusDeviceId)
     {
