@@ -367,6 +367,34 @@ hell_Time()
 }
 
 void
+hell_PushMouseWheelDownEvent(Hell_EventQueue* queue, int16_t x, int16_t y, Hell_WindowID winid)
+{
+    Hell_Event ev = {
+        .type = HELL_EVENT_TYPE_MOUSEWHEELDOWN,
+        .mask = HELL_EVENT_MASK_POINTER_BIT,
+        .time = hell_Time(),
+    };
+    ev.data.winData.data.mouseData.x          = x;
+    ev.data.winData.data.mouseData.y          = y;
+    ev.data.winData.windowID = winid;
+    pushEvent(queue, ev);
+}
+
+void
+hell_PushMouseWheelUpEvent(Hell_EventQueue* queue, int16_t x, int16_t y, Hell_WindowID winid)
+{
+    Hell_Event ev = {
+        .type = HELL_EVENT_TYPE_MOUSEWHEELUP,
+        .mask = HELL_EVENT_MASK_POINTER_BIT,
+        .time = hell_Time(),
+    };
+    ev.data.winData.data.mouseData.x          = x;
+    ev.data.winData.data.mouseData.y          = y;
+    ev.data.winData.windowID = winid;
+    pushEvent(queue, ev);
+}
+
+void
 hell_PushMouseDownEvent(Hell_EventQueue* queue, int16_t x, int16_t y,
                         uint8_t buttonCode, Hell_WindowID winid)
 {
