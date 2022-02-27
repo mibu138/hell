@@ -9,6 +9,7 @@ option(HELL_SKIP_TESTS "Skip building hell tests" OFF)
 option(HELL_NO_WINDOW "Skip building hell window" OFF)
 option(HELL_XCB_DEBUG_MESSAGES "Turn on debug messages for xcb" OFF)
 option(HELL_VAR_VALUE_64_BIT "Make Hell_Var values doubles (floats by default)" OFF)
+option(HELL_SIMPLE_FUNCTION_NAMES "Allows the used of un-prefixed hell functions" OFF)
 
 if (${HELL_XCB_DEBUG_MESSAGES})
     add_compile_definitions(HELL_XCB_DEBUG_MESSAGES)

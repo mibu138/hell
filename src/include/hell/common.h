@@ -105,4 +105,21 @@ Hell_EventQueue* hell_AllocEventQueue(void);
 Hell_Grimoire*   hell_AllocGrimoire(void);
 Hell_Hellmouth*  hell_AllocHellmouth(void);
 
+#ifdef HELL_SIMPLE_NAMES
+#define HELL_SIMPLE_FUNCTION_NAMES
+#define HELL_SIMPLE_TYPE_NAMES
+#endif
+
+#ifdef HELL_SIMPLE_FUNCTION_NAMES
+#define Print(...) hell_Print(__VA_ARGS__)
+#define OpenHellmouth(...) hell_OpenHellmouth(__VA_ARGS__)
+#define OpenHellmouth_NoConsole(...) hell_OpenHellmouth_NoConsole(__VA_ARGS__)
+#define Loop(...) hell_Loop(__VA_ARGS__)
+#endif
+
+#ifdef HELL_SIMPLE_TYPE_NAMES
+typedef Hell_Hellmouth Hellmouth;
+typedef Hell_Event     Event;
+#endif
+
 #endif /* end of include guard: HELL_COM_H */
