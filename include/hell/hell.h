@@ -7,7 +7,7 @@ extern "C" {
 
 #include "common.h"
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 }
 #endif
 

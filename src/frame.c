@@ -27,9 +27,9 @@ void
 hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Console* console,
                      uint32_t windowCount, Hell_Window* windows[],
                      Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown,
-                     Hell_Hellmouth* hellmouth)
+                     Hell_Mouth* hellmouth)
 {
-    memset(hellmouth, 0, sizeof(Hell_Hellmouth));
+    memset(hellmouth, 0, sizeof(Hell_Mouth));
     assert(queue);
     assert(grimoire);
     hell_InitLogger();
@@ -51,7 +51,7 @@ hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Conso
 }
 
 int
-hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Hellmouth* hm)
+hell_OpenMouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Mouth* hm)
 {
     hm->eventqueue = hell_AllocEventQueue();
     hm->grimoire   = hell_AllocGrimoire();
@@ -73,7 +73,7 @@ hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_He
 }
 
 int
-hell_OpenHellmouth_NoConsole(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Hellmouth* hm)
+hell_OpenMouthNoConsole(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Mouth* hm)
 {
     hm->eventqueue = hell_AllocEventQueue();
     hm->grimoire   = hell_AllocGrimoire();
@@ -94,7 +94,7 @@ hell_OpenHellmouth_NoConsole(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDow
 }
 
 Hell_Window*
-hell_HellmouthAddWindow(Hell_Hellmouth* hm, u16 w, u16 h, const char* name)
+hell_HellmouthAddWindow(Hell_Mouth* hm, u16 w, u16 h, const char* name)
 {
     const u32 i = hm->windowCount++;
     // note realloc behaves as malloc if hm->windows == 0
@@ -104,7 +104,7 @@ hell_HellmouthAddWindow(Hell_Hellmouth* hm, u16 w, u16 h, const char* name)
     return hm->windows[i];
 }
 
-void hell_Frame(Hell_Hellmouth* h, Tick delta)
+void hell_Frame(Hell_Mouth* h, Tick delta)
 {
     hell_CoagulateInput(h->eventqueue, h->console, h->windowCount, h->windows);
     hell_SolveInput(h->eventqueue, h->frameEventStack, &h->frameEventCount);
@@ -112,7 +112,7 @@ void hell_Frame(Hell_Hellmouth* h, Tick delta)
 }
 
 const Hell_Event*
-hell_GetEvents(Hell_Hellmouth* h, int* event_count)
+hell_GetEvents(Hell_Mouth* h, int* event_count)
 {
     *event_count = h->frameEventCount;
     return h->frameEventStack;
@@ -124,7 +124,7 @@ fpsToFrameDur(double fps)
     return (1.0 / fps) * 1e6;
 }
 
-void hell_Loop(Hell_Hellmouth* h)
+void hell_Loop(Hell_Mouth* h)
 {
     Tick start, delta, target;
     Hell_Event frame_event_stack[MAX_QUEUE_EVENTS];
@@ -151,7 +151,7 @@ void hell_Loop(Hell_Hellmouth* h)
     }
 }
 
-void hell_DestroyHellmouth(Hell_Hellmouth* h)
+void hell_DestroyHellmouth(Hell_Mouth* h)
 {
     for (int i = 0; i < h->windowCount; i++)
     {
@@ -166,7 +166,7 @@ void hell_DestroyHellmouth(Hell_Hellmouth* h)
 
 void hell_Quit(Hell_Grimoire* grim, void* hellmouthvoid)
 {
-    Hell_Hellmouth* hellmouth = (Hell_Hellmouth*)hellmouthvoid;
+    Hell_Mouth* hellmouth = (Hell_Mouth*)hellmouthvoid;
     if (hellmouth->userShutDown)
         hellmouth->userShutDown();
     hell_DestroyHellmouth(hellmouth);
@@ -178,14 +178,14 @@ void hell_Exit(int code)
     exit(code);
 }
 
-void hell_CloseHellmouth(Hell_Hellmouth* hellmouth)
+void hell_CloseHellmouth(Hell_Mouth* hellmouth)
 {
     if (hellmouth->userShutDown)
         hellmouth->userShutDown();
     hell_DestroyHellmouth(hellmouth);
 }
 
-void hell_CloseAndExit(Hell_Hellmouth* hm)
+void hell_CloseAndExit(Hell_Mouth* hm)
 {
     hell_CloseHellmouth(hm);
     hell_Exit(0);
@@ -193,10 +193,10 @@ void hell_CloseAndExit(Hell_Hellmouth* hm)
 
 uint64_t hell_SizeOfHellmouth(void)
 {
-    return sizeof(Hell_Hellmouth);
+    return sizeof(Hell_Mouth);
 }
 
-Hell_Hellmouth* hell_AllocHellmouth(void)
+Hell_Mouth* hell_AllocHellmouth(void)
 {
-    return hell_Malloc(sizeof(Hell_Hellmouth));
+    return hell_Malloc(sizeof(Hell_Mouth));
 }

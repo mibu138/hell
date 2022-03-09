@@ -10,14 +10,12 @@
 
 typedef enum { HELL_ERR_FATAL, HELL_ERR_MILD } Hell_ErrorCode;
 
-typedef struct Hell_Window    Hell_Window;
-typedef struct Hell_Hellmouth Hell_Hellmouth;
-
-typedef void (*Hell_FrameFn)(Hell_Frame frameNumber, Hell_Tick dt /*microseconds*/);
+typedef void (*Hell_FrameFn)(Hell_Frame frameNumber,
+                             Hell_Tick  dt /*microseconds*/);
 typedef void (*Hell_ShutDownFn)(void);
 
-typedef struct Hell_Window    Hell_Window;
-typedef struct Hell_Hellmouth {
+typedef struct Hell_Window Hell_Window;
+typedef struct Hell_Mouth {
     Hell_Grimoire*   grimoire;
     Hell_EventQueue* eventqueue;
     Hell_Console*    console;
@@ -30,7 +28,7 @@ typedef struct Hell_Hellmouth {
     // points to a buffer on the stack in hell_Loop()
     Hell_Event*      frameEventStack;
     int              frameEventCount;
-} Hell_Hellmouth;
+} Hell_Mouth;
 
 void hell_Print(const char* fmt, ...);
 void hell_Print_Vec3(const float[3]);
@@ -48,27 +46,30 @@ char* hell_CopyString(const char* in);
 // returns time since epoch in microseconds
 Hell_Tick hell_Time(void);
 
-// return a smallest integer greater than or equal to quantity that satisfies alignment
-uint64_t  hell_Align(const uint64_t quantity, const uint32_t alignment);
-void      hell_BitPrint(const void* const thing, const uint32_t bitcount);
-void      hell_BytePrint(const void* const thing, const uint32_t byteCount);
-void      hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue,
-                               Hell_Console* console, uint32_t windowCount,
-                               Hell_Window* windows[],
-                               Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown,
-                               Hell_Hellmouth* hellmouth);
+// return a smallest integer greater than or equal to quantity that satisfies
+// alignment
+uint64_t hell_Align(const uint64_t quantity, const uint32_t alignment);
+void     hell_BitPrint(const void* const thing, const uint32_t bitcount);
+void     hell_BytePrint(const void* const thing, const uint32_t byteCount);
+void     hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue,
+                              Hell_Console* console, uint32_t windowCount,
+                              Hell_Window* windows[], Hell_FrameFn userFrame,
+                              Hell_ShutDownFn userShutDown, Hell_Mouth* hellmouth);
 // abreviated hellmouth creation that allocs and creates everythin
 // returns 0 as success
-int  hell_OpenHellmouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Hellmouth* hm);
-int hell_OpenHellmouth_NoConsole(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Hellmouth* hm);
-void hell_CloseHellmouth(Hell_Hellmouth* hellmouth);
-void hell_CloseAndExit(Hell_Hellmouth*);
+int  hell_OpenMouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown,
+                        Hell_Mouth* hm);
+int  hell_OpenMouthNoConsole(Hell_FrameFn    userFrame,
+                                  Hell_ShutDownFn userShutDown, Hell_Mouth* hm);
+void hell_CloseHellmouth(Hell_Mouth* hellmouth);
+void hell_CloseAndExit(Hell_Mouth*);
 
-Hell_Window* hell_HellmouthAddWindow(Hell_Hellmouth* hm, u16 w, u16 h, const char* name);
-void hell_Exit(int code);
+Hell_Window* hell_HellmouthAddWindow(Hell_Mouth* hm, u16 w, u16 h,
+                                     const char* name);
+void         hell_Exit(int code);
 // sleep for s seconds
-void hell_Sleep(double s);
-void hell_MicroSleep(uint64_t us);
+void         hell_Sleep(double s);
+void         hell_MicroSleep(uint64_t us);
 
 // platform agnostic library loading
 void* hell_LoadLibrary(const char* name);
@@ -79,12 +80,11 @@ bool hell_FileExists(const char* path);
 // uber function that calls the individual initializers in the correct order
 
 // run run run and never return
-void hell_Loop(Hell_Hellmouth*);
+void hell_Loop(Hell_Mouth*);
 
-void hell_Frame(Hell_Hellmouth*, Hell_Tick dt); // run single frame
+void hell_Frame(Hell_Mouth*, Hell_Tick dt); // run single frame
 
-const Hell_Event*
-hell_GetEvents(Hell_Hellmouth* h, int* event_count);
+const Hell_Event* hell_GetEvents(Hell_Mouth* h, int* event_count);
 
 // uber function that call the individual shut down functions in the correct
 // order
@@ -103,7 +103,7 @@ Hell_Window*     hell_AllocWindow(void);
 Hell_Console*    hell_AllocConsole(void);
 Hell_EventQueue* hell_AllocEventQueue(void);
 Hell_Grimoire*   hell_AllocGrimoire(void);
-Hell_Hellmouth*  hell_AllocHellmouth(void);
+Hell_Mouth*      hell_AllocHellmouth(void);
 
 #ifdef HELL_SIMPLE_NAMES
 #define HELL_SIMPLE_FUNCTION_NAMES

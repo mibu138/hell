@@ -1,7 +1,10 @@
 #ifndef HELL_DS_H
 #define HELL_DS_H
 
+#define STBDS_NO_SHORT_NAMES
 #include "types.h"
+#include "stb_ds.h"
+#include "common.h"
 
 typedef void* (*HellAllocFn)(u64 size);
 typedef void* (*HellReallocFn)(void*, u64 size);
@@ -32,5 +35,25 @@ void  hell_ArrayPop(Hell_Array*, void* target);
 void  hell_ArrayClear(Hell_Array* arr);
 // if userAlloc is null will default to Hell_Free
 void  hell_DestroyArray(Hell_Array*, HellFreeFn userFree);
+
+// new array based on stbds_array
+
+#define hell_ArrLen      stbds_arrlen
+#define hell_ArrLenu     stbds_arrlenu
+#define hell_ArrPut      stbds_arrput
+#define hell_ArrPush     stbds_arrput
+#define hell_ArrPop      stbds_arrpop
+#define hell_ArrFree     stbds_arrfree
+#define hell_ArrAddnPtr  stbds_arraddnptr
+#define hell_ArrAddnIndex stbds_arraddnindex
+#define hell_ArrSetLen   stbds_arrsetlen
+#define hell_ArrLast     stbds_arrlast
+#define hell_ArrIns      stbds_arrins
+#define hell_ArrInsn     stbds_arrinsn
+#define hell_ArrDel      stbds_arrdel
+#define hell_ArrDeln     stbds_arrdeln
+#define hell_ArrDelSwap  stbds_arrdelswap
+#define hell_ArrCap      stbds_arrcap
+#define hell_ArrSetCap   stbds_arrsetcap
 
 #endif /* end of include guard: HELL_DS_H */

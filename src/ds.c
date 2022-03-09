@@ -1,5 +1,8 @@
-#include "ds.h"
 #include "common.h"
+#define STB_DS_IMPLEMENTATION
+#define STBDS_REALLOC(c,p,s) hell_Realloc(p,s)
+#define STBDS_FREE(c,p) hell_Free(p)
+#include "ds.h"
 #include <string.h>
 #include <assert.h>
 
@@ -8,7 +11,7 @@ static void growArray(Hell_Array* stack)
     assert(stack->capacity < UINT32_MAX / 2);
     u32 newCap = stack->capacity * 2;
     stack->elems = stack->reallocFn(stack->elems, newCap);
-    if (!stack->elems) 
+    if (!stack->elems)
         hell_Error(HELL_ERR_FATAL, "Stack growth failed.\n");
     stack->capacity = newCap;
 }
@@ -34,13 +37,13 @@ void  hell_CreateArray(u32 capacity, u32 elemSize, HellAllocFn userAlloc, HellRe
     array->elemSize = elemSize;
     if (userRealloc)
         array->reallocFn = userRealloc;
-    else 
+    else
         array->reallocFn = hell_Realloc;
-    if (userAlloc) 
+    if (userAlloc)
         array->elems = userAlloc(capacity * elemSize);
-    else 
+    else
         array->elems = hell_Malloc(capacity * elemSize);
-    if (!array->elems) 
+    if (!array->elems)
         hell_Error(HELL_ERR_FATAL, "Stack allocation failed.\n");
 }
 
@@ -72,8 +75,10 @@ void  hell_DestroyArray(Hell_Array* stack, HellFreeFn userFree)
 {
     if (userFree)
         userFree(stack->elems);
-    else 
+    else
         hell_Free(stack->elems);
     memset(stack, 0, sizeof(*stack));
 }
+
+
 
