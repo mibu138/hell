@@ -1,3 +1,5 @@
+#define HELL_SIMPLE_TYPE_NAMES
+#define HELL_SIMPLE_FUNCTION_NAMES
 #include "common.h"
 #include "cmd.h"
 #include "io.h"
@@ -10,7 +12,6 @@
 #include "stdlib.h"
 #include <assert.h>
 #include <string.h>
-#define HELL_SIMPLE_TYPE_NAMES
 #include "types.h"
 #include "vars.h"
 
@@ -55,13 +56,22 @@ hell_OpenMouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Mouth*
 {
     hm->eventqueue = hell_AllocEventQueue();
     hm->grimoire   = hell_AllocGrimoire();
-    hm->console    = hell_AllocConsole();
     hm->userShutDown = userShutDown;
     hm->userFrame  = userFrame ? userFrame : dummyUserFrame;
 
     hell_CreateEventQueue(hm->eventqueue);
-    hell_CreateConsole(hm->console);
     hell_CreateGrimoire(hm->eventqueue, hm->grimoire);
+
+    if (!getenv("HELL_NO_TTY"))
+    {
+        hm->console = hell_AllocConsole();
+        hell_CreateConsole(hm->console);
+    }
+    else
+    {
+        Print("HELL_NO_TTY defined! No terminal\n");
+        hm->console = NULL;
+    }
 
     hell_AddCommand(hm->grimoire, "quit", hell_Quit, hm);
     const Hell_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", 0, 0);

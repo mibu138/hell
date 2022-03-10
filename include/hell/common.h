@@ -110,16 +110,20 @@ Hell_Mouth*      hell_AllocHellmouth(void);
 #define HELL_SIMPLE_TYPE_NAMES
 #endif
 
+#ifdef HELL_SIMPLE_FUNC_NAME
+#define HELL_SIMPLE_FUNCTION_NAMES
+#endif
 #ifdef HELL_SIMPLE_FUNCTION_NAMES
 #define Print(...) hell_Print(__VA_ARGS__)
-#define OpenHellmouth(...) hell_OpenHellmouth(__VA_ARGS__)
+#define OpenMouth(...) hell_OpenMouth(__VA_ARGS__)
 #define OpenHellmouth_NoConsole(...) hell_OpenHellmouth_NoConsole(__VA_ARGS__)
 #define Loop(...) hell_Loop(__VA_ARGS__)
 #endif
 
 #ifdef HELL_SIMPLE_TYPE_NAMES
-typedef Hell_Hellmouth Hellmouth;
-typedef Hell_Event     Event;
+typedef Hell_Mouth Hellmouth;
+typedef Hell_Mouth Mouth;
+typedef Hell_Event Event;
 #endif
 
 #endif /* end of include guard: HELL_COM_H */

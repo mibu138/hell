@@ -1,3 +1,4 @@
+#define HELL_SIMPLE_FUNCTION_NAMES
 #include "input.h"
 #include "cmd.h"
 #include "common.h"
@@ -10,6 +11,7 @@
 #include <memory.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <time.h>
 //
 #ifdef UNIX
