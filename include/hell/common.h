@@ -35,6 +35,13 @@ void hell_Print_Vec3(const float[3]);
 void hell_Print_Mat4(const float[4][4]);
 void hell_Announce(const char* fmt, ...);
 void hell_Error(Hell_ErrorCode code, const char* fmt, ...);
+void hell_ErrorFatalImpl(const char* fmt, ...);
+
+// the ## makes the variable args optional (otherwise you need to give at least
+// 1)
+#define hell_error_fatal(fmt, ...)                                             \
+    hell_ErrorFatalImpl("%s:%d:%s() ...\n%s\n", __FILE__, __LINE__, __func__,  \
+                        fmt, ##__VA_ARGS__)
 
 // will error if allocation fails
 void* hell_Malloc(size_t size);
@@ -57,12 +64,12 @@ void     hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue,
                               Hell_ShutDownFn userShutDown, Hell_Mouth* hellmouth);
 // abreviated hellmouth creation that allocs and creates everythin
 // returns 0 as success
-int  hell_OpenMouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown,
+int      hell_OpenMouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown,
                         Hell_Mouth* hm);
-int  hell_OpenMouthNoConsole(Hell_FrameFn    userFrame,
-                                  Hell_ShutDownFn userShutDown, Hell_Mouth* hm);
-void hell_CloseHellmouth(Hell_Mouth* hellmouth);
-void hell_CloseAndExit(Hell_Mouth*);
+int      hell_OpenMouthNoConsole(Hell_FrameFn    userFrame,
+                                 Hell_ShutDownFn userShutDown, Hell_Mouth* hm);
+void     hell_CloseHellmouth(Hell_Mouth* hellmouth);
+void     hell_CloseAndExit(Hell_Mouth*);
 
 Hell_Window* hell_HellmouthAddWindow(Hell_Mouth* hm, u16 w, u16 h,
                                      const char* name);
@@ -105,12 +112,19 @@ Hell_EventQueue* hell_AllocEventQueue(void);
 Hell_Grimoire*   hell_AllocGrimoire(void);
 Hell_Mouth*      hell_AllocHellmouth(void);
 
+static inline bool
+hell_is_power_of_two(int64_t x)
+{
+    return x && (!(x & (x - 1)));
+}
+
+
 #ifdef HELL_SIMPLE_NAMES
 #define HELL_SIMPLE_FUNCTION_NAMES
 #define HELL_SIMPLE_TYPE_NAMES
 #endif
 
-#ifdef HELL_SIMPLE_FUNC_NAME
+#ifdef HELL_SIMPLE_FUNC_NAMES
 #define HELL_SIMPLE_FUNCTION_NAMES
 #endif
 #ifdef HELL_SIMPLE_FUNCTION_NAMES
@@ -118,6 +132,14 @@ Hell_Mouth*      hell_AllocHellmouth(void);
 #define OpenMouth(...) hell_OpenMouth(__VA_ARGS__)
 #define OpenHellmouth_NoConsole(...) hell_OpenHellmouth_NoConsole(__VA_ARGS__)
 #define Loop(...) hell_Loop(__VA_ARGS__)
+#define error hell_error_fatal
+#define print hell_Print
+#endif
+
+#ifdef hell_array_alloc
+#error "hell_array_alloc already defined!"
+#else
+#define hell_array_alloc(arr, count) arr = hell_Malloc(sizeof(*arr) * count)
 #endif
 
 #ifdef HELL_SIMPLE_TYPE_NAMES

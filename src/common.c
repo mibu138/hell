@@ -30,8 +30,10 @@ hell_Print(const char* fmt, ...)
 {
     va_list argptr;
     char    msg[MAX_PRINT_MSG];
+    int64_t c = 0;
     va_start(argptr, fmt);
-    vsnprintf(msg, sizeof(msg), fmt, argptr);
+    c += vsnprintf(msg + c, sizeof(msg), fmt, argptr);
+    //c += sprintf(msg + c, "\n");
     va_end(argptr);
     fputs(msg, stdout);
 #if WIN32
@@ -82,6 +84,25 @@ hell_Error(Hell_ErrorCode errorCode, const char* fmt, ...)
     hell_WriteToLog(errorMsgBuffer);
     if (errorCode == HELL_ERR_FATAL)
         hell_Abort();
+}
+
+void
+hell_ErrorFatalImpl(const char* fmt, ...)
+{
+    va_list       argptr;
+    const int64_t len = sizeof(errorMsgBuffer);
+    int64_t       c   = 0;
+    c += sprintf(errorMsgBuffer + c, "*** ERROR ***\n");
+    va_start(argptr, fmt);
+    c += vsnprintf(errorMsgBuffer + c, len - c, fmt, argptr);
+    va_end(argptr);
+    c += snprintf(errorMsgBuffer + c, len - c, "Errno %d\n", errno);
+    fputs(errorMsgBuffer, stderr);
+#if WIN32
+    OutputDebugString(errorMsgBuffer);
+#endif
+    hell_WriteToLog(errorMsgBuffer);
+    hell_Abort();
 }
 
 uint64_t
