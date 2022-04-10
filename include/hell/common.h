@@ -132,8 +132,9 @@ hell_is_power_of_two(int64_t x)
 #define OpenMouth(...) hell_OpenMouth(__VA_ARGS__)
 #define OpenHellmouth_NoConsole(...) hell_OpenHellmouth_NoConsole(__VA_ARGS__)
 #define Loop(...) hell_Loop(__VA_ARGS__)
-#define error hell_error_fatal
+#define error_fatal hell_error_fatal
 #define print hell_Print
+#define malloc hell_Malloc
 #endif
 
 #ifdef hell_array_alloc
