@@ -137,8 +137,7 @@ fpsToFrameDur(double fps)
 void hell_Loop(Hell_Mouth* h)
 {
     Tick start, delta, target;
-    Hell_Event frame_event_stack[MAX_QUEUE_EVENTS];
-    h->frameEventStack = frame_event_stack;
+    h->frameEventStack = hell_Malloc(sizeof(Hell_Event) * MAX_QUEUE_EVENTS);
 
     // vars should never be removed once an application starts, so it is safe to
     // hold onto a pointer to one.
@@ -147,7 +146,8 @@ void hell_Loop(Hell_Mouth* h)
     hell_StartClock();
     hell_Announce("Entering Hell Loop.\n");
     delta = fpsToFrameDur(var_fps->value);
-    while (1)
+
+    for (;;)
     {
         start = hell_Time();
         h->frameEventCount = 0;

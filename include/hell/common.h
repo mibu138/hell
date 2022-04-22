@@ -31,6 +31,8 @@ typedef struct Hell_Mouth {
 } Hell_Mouth;
 
 void hell_Print(const char* fmt, ...);
+// this one will insert a new line automatically
+void hell_print(const char* fmt, ...);
 void hell_Print_Vec3(const float[3]);
 void hell_Print_Mat4(const float[4][4]);
 void hell_Announce(const char* fmt, ...);
@@ -133,14 +135,14 @@ hell_is_power_of_two(int64_t x)
 #define OpenHellmouth_NoConsole(...) hell_OpenHellmouth_NoConsole(__VA_ARGS__)
 #define Loop(...) hell_Loop(__VA_ARGS__)
 #define error_fatal hell_error_fatal
-#define print hell_Print
+#define print hell_print
 #define malloc hell_Malloc
 #endif
 
-#ifdef hell_array_alloc
+#ifdef hell_array_alloc2
 #error "hell_array_alloc already defined!"
 #else
-#define hell_array_alloc(arr, count) arr = hell_Malloc(sizeof(*arr) * count)
+#define hell_array_alloc(arr, count) ((arr) = hell_Malloc(sizeof(arr[0]) * (count)))
 #endif
 
 #ifdef HELL_SIMPLE_TYPE_NAMES

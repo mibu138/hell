@@ -216,6 +216,7 @@ void
 hell_CreateConsole(Hell_Console* console)
 {
 #ifdef UNIX
+    memset(console, 0, sizeof(*console));
     struct termios tc;
     if (isatty(STDIN_FILENO) != 1)
         hell_Error(0, "stdin is not a tty, tty console mode failed");

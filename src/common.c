@@ -43,6 +43,24 @@ hell_Print(const char* fmt, ...)
 }
 
 void
+hell_print(const char* fmt, ...)
+{
+    va_list argptr;
+    char    msg[MAX_PRINT_MSG];
+    int64_t c = 0;
+    va_start(argptr, fmt);
+    c += vsnprintf(msg + c, sizeof(msg), fmt, argptr);
+    assert((char*)c - msg < MAX_PRINT_MSG - 2);
+    c += sprintf(msg + c, "\n");
+    va_end(argptr);
+    fputs(msg, stdout);
+#if WIN32
+    OutputDebugString(msg);
+#endif
+    hell_WriteToLog(msg);
+}
+
+void
 hell_Announce(const char* fmt, ...)
 {
     va_list argptr;
