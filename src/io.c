@@ -63,7 +63,7 @@ void hell_InitLogger(void)
     {
         hell_log = fopen(logpathbuf, "w");
         if (!hell_log)
-            hell_Error(HELL_ERR_FATAL, "Failed to open %s.\n", LOG_NAME);
+            printf(" Failed to open %s.\n", LOG_NAME);
     }
     globalFileCounter++;
 }
