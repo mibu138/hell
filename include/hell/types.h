@@ -2,6 +2,7 @@
 // should only be simple typedefs otherwise we well get redefinition errors.
 
 #include <stdint.h>
+#include <stddef.h>
 
 typedef uint8_t  Hell_Byte;
 typedef uint64_t Hell_Size;

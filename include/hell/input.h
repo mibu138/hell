@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "ds.h"
 #include "types.h"
 #include "evcodes.h"
 
@@ -48,10 +49,15 @@ typedef struct Hell_DeviceEventData {
     Hell_InputData data;
 } Hell_DeviceEventData;
 
+typedef struct Hell_FrameEventData {
+    uint64_t frame_number;
+} Hell_FrameEventData;
+
 typedef union Hell_EventData {
     Hell_WindowEventData  winData;
     Hell_DeviceEventData  devData;
     Hell_ConsoleEventData conData;
+    Hell_FrameEventData frameData;
 } Hell_EventData;
 
 typedef enum Hell_EventType {
@@ -65,7 +71,8 @@ typedef enum Hell_EventType {
     HELL_EVENT_TYPE_MOTION,
     HELL_EVENT_TYPE_RESIZE,
     HELL_EVENT_TYPE_CONSOLE,
-    HELL_EVENT_TYPE_STYLUS
+    HELL_EVENT_TYPE_STYLUS,
+    HELL_EVENT_TYPE_FRAME
 } Hell_EventType;
 
 typedef enum Hell_EventMaskBits {
@@ -129,17 +136,21 @@ void hell_PushMouseWheelDownEvent(Hell_EventQueue* queue, int16_t x, int16_t y, 
 void hell_PushMouseWheelUpEvent(Hell_EventQueue* queue, int16_t x, int16_t y, Hell_WindowID winid);
 void hell_PushMouseUpEvent(Hell_EventQueue*, int16_t x, int16_t y,
                            uint8_t buttonCode, Hell_WindowID winid);
+void hell_PushStylusEvent2(Hell_EventQueue* queue, int16_t x, int16_t y, uint8_t buttonCode, float pressure,
+                     Hell_WindowID winid);
 void hell_PushMouseMotionEvent(Hell_EventQueue*, int16_t x, int16_t y,
                                uint8_t buttonCode, Hell_WindowID winid);
 void hell_PushKeyDownEvent(Hell_EventQueue*, uint32_t keyCode, Hell_WindowID winid);
 void hell_PushKeyUpEvent(Hell_EventQueue*, uint32_t keyCode, Hell_WindowID winid);
 void hell_PushEmptyEvent(Hell_EventQueue*);
 void hell_PushStylusEvent(Hell_EventQueue* queue, float pressure, Hell_WindowID winid);
+void hell_PushFrameEvent(Hell_EventQueue*, uint64_t frame_number);
 
 uint16_t hell_GetWindowResizeWidth(const Hell_Event* event);
 uint16_t hell_GetWindowResizeHeight(const Hell_Event* event);
 int16_t  hell_GetMouseX(const Hell_Event*);
 int16_t  hell_GetMouseY(const Hell_Event*);
+void hell_RecordInput(Hell_EventQueue* queue, Hell_Array* buffer);
 
 uint8_t hell_GetEventButtonCode(const Hell_Event* event);
 uint8_t hell_GetEventKeyCode(const Hell_Event* event);

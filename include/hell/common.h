@@ -14,6 +14,10 @@ typedef void (*Hell_FrameFn)(Hell_Frame frameNumber,
                              Hell_Tick  dt /*microseconds*/);
 typedef void (*Hell_ShutDownFn)(void);
 
+typedef enum {
+    HELL_OPTION_RECORD_INPUT
+} Hell_Options;
+
 typedef struct Hell_Window Hell_Window;
 typedef struct Hell_Mouth {
     Hell_Grimoire*   grimoire;
@@ -28,6 +32,8 @@ typedef struct Hell_Mouth {
     // points to a buffer on the stack in hell_Loop()
     Hell_Event*      frameEventStack;
     int              frameEventCount;
+    uint32_t         options;
+    HellArray        recorded_input;
 } Hell_Mouth;
 
 void hell_Print(const char* fmt, ...);
@@ -137,6 +143,7 @@ hell_is_power_of_two(int64_t x)
 #define error_fatal hell_error_fatal
 #define print hell_print
 #define malloc hell_Malloc
+#define free hell_Free
 #endif
 
 #ifdef hell_array_alloc2

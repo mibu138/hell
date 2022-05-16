@@ -1,3 +1,4 @@
+#include "ds.h"
 #define HELL_SIMPLE_FUNCTION_NAMES
 #include "input.h"
 #include "cmd.h"
@@ -280,6 +281,20 @@ hell_CoagulateInput(Hell_EventQueue* queue, Hell_Console* console,
     }
 }
 
+void 
+hell_RecordInput(Hell_EventQueue* queue, Hell_Array* buffer)
+{
+    int iter = queue->tail;
+    while (iter != queue->head) {
+        Hell_Event* event = &queue->queue[iter];
+        // again, console events have pointers.. not worth dealing with most of
+        // the time.
+        if (event->type != HELL_EVENT_TYPE_CONSOLE) 
+            hell_array_push(buffer, event);
+        iter = (iter + 1) % MAX_QUEUE_EVENTS;
+    }
+}
+
 void
 hell_SolveInput(Hell_EventQueue* queue, Hell_Event* frame_event_stack,
                 int* frame_event_count)
@@ -425,6 +440,25 @@ hell_PushStylusEvent(Hell_EventQueue* queue, float pressure,
     pushEvent(queue, ev);
 }
 
+// this doesn't work. pressure events can be completely separate from motion
+// events. in other words, we can get stylus events with zeroed out position.
+void
+hell_PushStylusEvent2(Hell_EventQueue* queue, int16_t x, int16_t y, uint8_t buttonCode, float pressure,
+                     Hell_WindowID winid)
+{
+    Hell_Event ev                            = {.type = HELL_EVENT_TYPE_STYLUS,
+                                                .mask = HELL_EVENT_MASK_POINTER_BIT,
+                                                .time = hell_Time()};
+    ev.data.winData.data.mouseData.x          = x;
+    ev.data.winData.data.mouseData.y          = y;
+    ev.data.winData.data.mouseData.buttonCode = buttonCode;
+    ev.data.winData.data.stylusData.pressure = pressure;
+    ev.data.winData.windowID                 = winid;
+    hell_print("%d %d %d %f", x,y,buttonCode,pressure);
+    pushEvent(queue, ev);
+}
+
+
 void
 hell_PushMouseUpEvent(Hell_EventQueue* queue, int16_t x, int16_t y,
                       uint8_t buttonCode, Hell_WindowID winid)
@@ -498,6 +532,13 @@ void
 hell_PushEmptyEvent(Hell_EventQueue* queue)
 {
     Hell_Event ev = {.time = hell_Time()};
+    pushEvent(queue, ev);
+}
+
+void hell_PushFrameEvent(Hell_EventQueue* queue, uint64_t frame_number)
+{
+    Hell_FrameEventData data = {.frame_number = frame_number};
+    Hell_Event ev = {.time = hell_Time(), .data.frameData = data};
     pushEvent(queue, ev);
 }
 

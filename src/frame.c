@@ -14,6 +14,7 @@
 #include <string.h>
 #include "types.h"
 #include "vars.h"
+#include <stdio.h>
 
 typedef Hell_Var Var;
 
@@ -24,6 +25,32 @@ static void dummyUserFrame(Hell_Frame fi, Hell_Tick dt)
     // because we always call something
 }
 
+int hell_save_recorded_input(Hell_Mouth* hm, const char* filepath)
+{
+    int err = 0, num;
+    FILE* fp = fopen(filepath, "wb");
+    if (!fp) {err = -1; goto end;}
+
+    Hell_Event* events = hm->recorded_input.elems;
+    int count = hm->recorded_input.count;
+
+    for (int i = 0; i < count; ++i) {
+        num = fwrite(events + i, sizeof(*events), 1, fp);
+        if (num != 1) {err = -1; goto end;}
+    }
+
+end:
+    if (fp)
+        fclose(fp);
+    return err;
+}
+
+static void save_input_cmd(Hell_Grimoire* grim, void* data)
+{
+    hell_save_recorded_input(data, "recorded_input.hell");
+}
+
+// not used anymore... should see about removing it
 void
 hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Console* console,
                      uint32_t windowCount, Hell_Window* windows[],
@@ -43,7 +70,9 @@ hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Conso
     hellmouth->userFrame = userFrame ? userFrame : dummyUserFrame;
     hellmouth->userShutDown = userShutDown;
     hellmouth->targetFrameDuration = 16000; //us
+    hellmouth->recorded_input = hell_create_array(sizeof(Hell_Event), 4, hell_Realloc);
     hell_AddCommand(grimoire, "quit", hell_Quit, hellmouth);
+    hell_AddCommand(grimoire, "save_input", save_input_cmd, hellmouth);
     const Hell_Var* dedicated = hell_GetVar(grimoire, "dedicated", 0, 0);
     sv_Init();
     if (!dedicated->value)
@@ -58,6 +87,7 @@ hell_OpenMouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Mouth*
     hm->grimoire   = hell_AllocGrimoire();
     hm->userShutDown = userShutDown;
     hm->userFrame  = userFrame ? userFrame : dummyUserFrame;
+    hm->recorded_input = hell_create_array(sizeof(Hell_Event), 4, hell_Realloc);
 
     hell_CreateEventQueue(hm->eventqueue);
     hell_CreateGrimoire(hm->eventqueue, hm->grimoire);
@@ -74,6 +104,7 @@ hell_OpenMouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Mouth*
     }
 
     hell_AddCommand(hm->grimoire, "quit", hell_Quit, hm);
+    hell_AddCommand(hm->grimoire, "save_input", save_input_cmd, hm);
     const Hell_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", 0, 0);
     sv_Init();
     if (!dedicated->value)
@@ -116,7 +147,9 @@ hell_HellmouthAddWindow(Hell_Mouth* hm, u16 w, u16 h, const char* name)
 
 void hell_Frame(Hell_Mouth* h, Tick delta)
 {
+    hell_PushFrameEvent(h->eventqueue, h->frameCount);
     hell_CoagulateInput(h->eventqueue, h->console, h->windowCount, h->windows);
+    hell_RecordInput(h->eventqueue, &h->recorded_input);
     hell_SolveInput(h->eventqueue, h->frameEventStack, &h->frameEventCount);
     hell_Incantate(h->grimoire);
 }
@@ -147,8 +180,7 @@ void hell_Loop(Hell_Mouth* h)
     hell_Announce("Entering Hell Loop.\n");
     delta = fpsToFrameDur(var_fps->value);
 
-    for (;;)
-    {
+    for (;;) {
         start = hell_Time();
         h->frameEventCount = 0;
         hell_Frame(h, delta);

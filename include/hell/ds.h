@@ -2,7 +2,6 @@
 #define HELL_DS_H
 
 #include "types.h"
-#include "common.h"
 
 typedef void* (*HellAllocFn)(u64 size);
 // note that a proper realloc function needs to also handle case when size if 0
@@ -44,6 +43,8 @@ void  hell_DestroyArray(Hell_Array*, HellFreeFn userFree);
 void* hell_array_push(HellArray* arr, const void* elem);
 
 void hell_array_free(HellArray* arr);
+
+#define hell_array_get(arr, type, index) (((type*)arr.elems)[index])
 
 // new array based on stbds_array
 
