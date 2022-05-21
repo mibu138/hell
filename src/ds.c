@@ -76,6 +76,14 @@ void* hell_array_push(HellArray* restrict arr, const void* restrict elem)
     return stkptr;
 }
 
+void hell_array_remove_swap(HellArray* arr, size_t i)
+{
+    void* elem = (char*)arr->elems + i * arr->elemSize;
+    void* last_elem = (char*)arr->elems + (arr->count - 1) * arr->elemSize;
+    memcpy(elem, last_elem, arr->elemSize);
+    --arr->count;
+}
+
 int   hell_array_putc(HellArray* a, char c)
 {
     assert(a->elemSize == 1);

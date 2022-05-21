@@ -42,6 +42,9 @@ void  hell_DestroyArray(Hell_Array*, HellFreeFn userFree);
 // returns ptr to element inside the array or null on error
 void* hell_array_push(HellArray* arr, const void* elem);
 
+// O(1) operation. does not preserve array order
+void hell_array_remove_swap(HellArray* arr, size_t i);
+
 void hell_array_free(HellArray* arr);
 
 #define hell_array_get(arr, type, index) (((type*)arr.elems)[index])
