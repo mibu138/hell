@@ -15,8 +15,9 @@ typedef void (*Hell_FrameFn)(Hell_Frame frameNumber,
 typedef void (*Hell_ShutDownFn)(void);
 
 typedef enum {
-    HELL_OPTION_RECORD_INPUT
-} Hell_Options;
+    HELL_OPTION_RECORD_INPUT_BIT = 1 << 0,
+    HELL_OPTION_ENABLE_TTY_CONSOLE_BIT  = 1 << 1
+} HellOptionFlagBits;
 
 typedef struct Hell_Window Hell_Window;
 typedef struct Hell_Mouth {
@@ -35,6 +36,8 @@ typedef struct Hell_Mouth {
     uint32_t         options;
     HellArray        recorded_input;
 } Hell_Mouth;
+
+typedef Hell_Mouth HellContext;
 
 void hell_Print(const char* fmt, ...);
 // this one will insert a new line automatically
@@ -72,10 +75,8 @@ void     hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue,
                               Hell_ShutDownFn userShutDown, Hell_Mouth* hellmouth);
 // abreviated hellmouth creation that allocs and creates everythin
 // returns 0 as success
-int      hell_OpenMouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown,
+int      hell_OpenMouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, uint32_t option_flags,
                         Hell_Mouth* hm);
-int      hell_OpenMouthNoConsole(Hell_FrameFn    userFrame,
-                                 Hell_ShutDownFn userShutDown, Hell_Mouth* hm);
 void     hell_CloseHellmouth(Hell_Mouth* hellmouth);
 void     hell_CloseAndExit(Hell_Mouth*);
 

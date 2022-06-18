@@ -81,18 +81,19 @@ hell_CreateHellmouth(Hell_Grimoire* grimoire, Hell_EventQueue* queue, Hell_Conso
 }
 
 int
-hell_OpenMouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Mouth* hm)
+hell_OpenMouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, uint32_t option_flags, Hell_Mouth* hm)
 {
     hm->eventqueue = hell_AllocEventQueue();
     hm->grimoire   = hell_AllocGrimoire();
     hm->userShutDown = userShutDown;
     hm->userFrame  = userFrame ? userFrame : dummyUserFrame;
     hm->recorded_input = hell_create_array(sizeof(Hell_Event), 4, hell_Realloc);
+    hm->console = NULL;
 
     hell_CreateEventQueue(hm->eventqueue);
     hell_CreateGrimoire(hm->eventqueue, hm->grimoire);
 
-    if (!getenv("HELL_NO_TTY"))
+    if ((option_flags & HELL_OPTION_ENABLE_TTY_CONSOLE_BIT))
     {
         hm->console = hell_AllocConsole();
         hell_CreateConsole(hm->console);
@@ -105,27 +106,6 @@ hell_OpenMouth(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Mouth*
 
     hell_AddCommand(hm->grimoire, "quit", hell_Quit, hm);
     hell_AddCommand(hm->grimoire, "save_input", save_input_cmd, hm);
-    const Hell_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", 0, 0);
-    sv_Init();
-    if (!dedicated->value)
-        cl_Init();
-    hell_Announce("Hellmouth created.\n");
-    return 0;
-}
-
-int
-hell_OpenMouthNoConsole(Hell_FrameFn userFrame, Hell_ShutDownFn userShutDown, Hell_Mouth* hm)
-{
-    hm->eventqueue = hell_AllocEventQueue();
-    hm->grimoire   = hell_AllocGrimoire();
-    hm->console    = NULL;
-    hm->userShutDown = userShutDown;
-    hm->userFrame  = userFrame ? userFrame : dummyUserFrame;
-
-    hell_CreateEventQueue(hm->eventqueue);
-    hell_CreateGrimoire(hm->eventqueue, hm->grimoire);
-
-    hell_AddCommand(hm->grimoire, "quit", hell_Quit, hm);
     const Hell_Var* dedicated = hell_GetVar(hm->grimoire, "dedicated", 0, 0);
     sv_Init();
     if (!dedicated->value)
